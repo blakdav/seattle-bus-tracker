@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seattle Bus Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface-raised: #fafaf9;
+      --border: rgba(0,0,0,0.1);
+      --border-strong: rgba(0,0,0,0.18);
+      --text-primary: #1a1a18;
+      --text-secondary: #5f5e5a;
+      --text-muted: #888780;
+      --accent: #1856a0;
+      --accent-bg: #e6f1fb;
+      --accent-text: #185fa5;
+      --danger: #a32d2d;
+      --danger-bg: #fcebeb;
+      --warning-text: #854f0b;
+      --success-text: #3b6d11;
+      --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a18;
+        --surface: #2c2c2a;
+        --surface-raised: #222220;
+        --border: rgba(255,255,255,0.1);
+        --border-strong: rgba(255,255,255,0.18);
+        --text-primary: #f0efe9;
+        --text-secondary: #b4b2a9;
+        --text-muted: #888780;
+        --accent: #5b96d4;
+        --accent-bg: #0c447c22;
+        --accent-text: #85b7eb;
+        --danger: #e24b4a;
+        --danger-bg: #501313;
+        --warning-text: #ef9f27;
+        --success-text: #97c459;
+      }
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+    .header-title { font-size: 16px; font-weight: 500; color: var(--text-primary); }
+    .header-sub { font-size: 12px; color: var(--text-muted); }
+
+    .auto-refresh-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+    .toggle-track { width: 36px; height: 20px; border-radius: 10px; background: var(--border-strong); cursor: pointer; position: relative; transition: background 0.2s; border: none; }
+    .toggle-track.on { background: var(--accent); }
+    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+    .toggle-track.on .toggle-thumb { transform: translateX(16px); }
+
+    main { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+    .tabs { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; width: 100%; }
+    .tab { flex: 1; padding: 8px; font-size: 13px; border: none; background: transparent; cursor: pointer; color: var(--text-secondary); font-family: var(--font); transition: background 0.15s; }
+    .tab.active { background: var(--surface); color: var(--text-primary); font-weight: 500; }
+    .tab:not(:last-child) { border-right: 0.5px solid var(--border); }
+
+    .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+    .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .search-row input { flex: 1; }
+
+    input[type="text"] {
+      height: 36px;
+      padding: 0 10px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: var(--font);
+      outline: none;
+      width: 100%;
+    }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+    input[type="text"]::placeholder { color: var(--text-muted); }
+
+    button {
+      height: 36px;
+      padding: 0 14px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    button:hover { background: var(--surface-raised); }
+    button:active { transform: scale(0.98); }
+    button.primary { background: var(--accent); color: #fff; border-color: transparent; }
+    button.primary:hover { opacity: 0.9; }
+
+    .search-results-list { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+    .search-result-item { padding: 10px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .search-result-item:last-child { border-bottom: none; }
+    .search-result-item:hover { background: var(--surface-raised); }
+    .result-name { font-size: 14px; color: var(--text-primary); }
+    .result-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .stop-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+    .stop-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .stop-name { font-size: 15px; font-weight: 500; color: var(--text-primary); line-height: 1.3; }
+    .stop-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+    .stop-id-pill { font-size: 11px; color: var(--text-muted); background: var(--surface-raised); border: 0.5px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: monospace; }
+    .stop-dir { font-size: 12px; color: var(--text-muted); }
+
+    .btn-icon { height: 28px; width: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: var(--radius); }
+    .btn-icon:hover { color: var(--danger); border-color: var(--danger); }
+
+    .arrivals-list { display: flex; flex-direction: column; }
+    .arrival-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 0.5px solid var(--border); }
+    .route-badge { font-size: 12px; font-weight: 600; min-width: 44px; text-align: center; padding: 3px 6px; border-radius: 4px; background: var(--accent-bg); color: var(--accent-text); letter-spacing: 0.01em; }
+    .arrival-dest { font-size: 13px; color: var(--text-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .arrival-right { text-align: right; min-width: 60px; }
+    .arrival-time { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .arrival-time.soon { color: var(--danger); }
+    .arrival-time.coming { color: var(--warning-text); }
+    .arrival-type { font-size: 11px; color: var(--text-muted); }
+    .arrival-type.live { color: var(--success-text); }
+
+    .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 8px 0 2px; }
+    .loading-msg { font-size: 13px; color: var(--text-muted); padding: 8px 0 2px; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; }
+    .empty-icon { font-size: 36px; color: var(--text-muted); margin-bottom: 12px; }
+    .empty-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
+    .empty-body { font-size: 13px; color: var(--text-muted); }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .last-updated { font-size: 12px; color: var(--text-muted); }
+
+    .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+    .hint a { color: var(--accent-text); }
+
+    .status-bar { font-size: 13px; color: var(--text-muted); text-align: center; padding: 1rem; }
+
+    .api-key-banner { background: #faeeda; border: 0.5px solid #efa020; border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1.25rem; font-size: 13px; color: #633806; display: flex; gap: 10px; align-items: flex-start; }
+    @media (prefers-color-scheme: dark) {
+      .api-key-banner { background: #412402; border-color: #854f0b; color: #fac775; }
+    }
+    .api-key-banner i { margin-top: 1px; flex-shrink: 0; }
+
+    #tab-search, #tab-byid { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-icon"><i class="ti ti-bus" aria-hidden="true"></i></div>
+    <div>
+      <div class="header-title">Seattle Bus Tracker</div>
+      <div class="header-sub">OneBusAway · Puget Sound</div>
+    </div>
+  </div>
+  <div class="auto-refresh-toggle">
+    <span>Auto-refresh</span>
+    <button class="toggle-track" id="auto-refresh-toggle" onclick="toggleAutoRefresh()" aria-label="Toggle auto-refresh">
+      <div class="toggle-thumb"></div>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- API key warning if using TEST key -->
+  <div class="api-key-banner" id="api-key-banner">
+    <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+    <div>Using the public <code>TEST</code> API key — rate-limited. For personal use, get a free key at
+      <a href="https://api.pugetsound.onebusaway.org" target="_blank" rel="noopener">api.pugetsound.onebusaway.org</a>
+      and set <code>OBA_KEY</code> at the top of this file.
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" role="tab" onclick="switchTab('saved')"><i class="ti ti-star" aria-hidden="true"></i> My stops</button>
+    <button class="tab" role="tab" onclick="switchTab('search')"><i class="ti ti-search" aria-hidden="true"></i> Find a stop</button>
+    <button class="tab" role="tab" onclick="switchTab('byid')"><i class="ti ti-hash" aria-hidden="true"></i> Stop ID</button>
+  </div>
+
+  <!-- My Stops -->
+  <div id="tab-saved">
+    <div class="toolbar">
+      <span class="last-updated" id="last-updated"></span>
+      <button onclick="refreshAll()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button>
+    </div>
+    <div id="saved-stops-container"></div>
+  </div>
+
+  <!-- Find a Stop -->
+  <div id="tab-search">
+    <p class="section-label">Search by name or intersection</p>
+    <div class="search-row">
+      <input type="text" id="search-input" placeholder="e.g. Pike & 3rd, Westlake Station, Capitol Hill"
+             onkeydown="if(event.key==='Enter') searchStops()" />
+      <button onclick="searchStops()">Search</button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <!-- By Stop ID -->
+  <div id="tab-byid">
+    <p class="section-label">Enter OneBusAway stop ID</p>
+    <div class="search-row">
+      <input type="text" id="stopid-input" placeholder="e.g. 1_29275"
+             onkeydown="if(event.key==='Enter') addByStopId()" />
+      <button onclick="addByStopId()">Add stop</button>
+    </div>
+    <p class="hint">Format is <code>1_XXXXX</code>. Find stop IDs in the
+      <a href="https://pugetsound.onebusaway.org" target="_blank" rel="noopener">OBA app</a> or by clicking a stop on the map.
+    </p>
+  </div>
+</main>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────────────────────────
+  const OBA_KEY = 'TEST'; // Replace with your free key from api.pugetsound.onebusaway.org
+  const OBA_BASE = 'https://api.pugetsound.onebusaway.org/api/where';
+  const MINUTES_AHEAD = 60;
+  const AUTO_REFRESH_INTERVAL = 30; // seconds
+  // ────────────────────────────────────────────────────────────────────────────
+
+  if (OBA_KEY !== 'TEST') {
+    document.getElementById('api-key-banner').style.display = 'none';
+  }
+
+  let savedStops = JSON.parse(localStorage.getItem('oba_saved_stops') || '[]');
+  let autoRefreshTimer = null;
+  let autoRefreshOn = localStorage.getItem('oba_auto_refresh') === 'true';
+  let activeTab = 'saved';
+
+  function saveStops() {
+    localStorage.setItem('oba_saved_stops', JSON.stringify(savedStops));
+  }
+
+  // ── TABS ────────────────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    activeTab = tab;
+    const ids = ['saved', 'search', 'byid'];
+    ids.forEach((id, i) => {
+      document.getElementById('tab-' + id).style.display = id === tab ? '' : 'none';
+      document.querySelectorAll('.tab')[i].classList.toggle('active', id === tab);
+    });
+    if (tab === 'saved') renderSaved();
+  }
+
+  // ── AUTO REFRESH ─────────────────────────────────────────────────────────
+  function toggleAutoRefresh() {
+    autoRefreshOn = !autoRefreshOn;
+    localStorage.setItem('oba_auto_refresh', autoRefreshOn);
+    const btn = document.getElementById('auto-refresh-toggle');
+    btn.classList.toggle('on', autoRefreshOn);
+    if (autoRefreshOn) startAutoRefresh();
+    else stopAutoRefresh();
+  }
+
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshTimer = setInterval(() => {
+      if (activeTab === 'saved' && savedStops.length) refreshAll();
+    }, AUTO_REFRESH_INTERVAL * 1000);
+  }
+
+  function stopAutoRefresh() {
+    if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+  }
+
+  // ── RENDER SAVED STOPS ───────────────────────────────────────────────────
+  function renderSaved() {
+    const el = document.getElementById('saved-stops-container');
+    if (!savedStops.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><i class="ti ti-bus-stop" aria-hidden="true"></i></div>
+        <div class="empty-title">No saved stops yet</div>
+        <div class="empty-body">Use "Find a stop" to search by name or intersection,<br>or enter a stop ID directly.</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = '';
+    savedStops.forEach(stop => {
+      const card = document.createElement('div');
+      card.className = 'stop-card';
+      const safeId = stop.id.replace(/\W/g, '_');
+      card.id = 'card-' + safeId;
+      card.innerHTML = `
+        <div class="stop-card-header">
+          <div>
+            <div class="stop-name">${escHtml(stop.name)}</div>
+            <div class="stop-meta">
+              <span class="stop-id-pill">${escHtml(stop.id)}</span>
+              ${stop.direction ? `<span class="stop-dir">${escHtml(stop.direction)} bound</span>` : ''}
+            </div>
+          </div>
+          <button class="btn-icon" onclick="removeStop('${stop.id}')" title="Remove stop" aria-label="Remove ${escHtml(stop.name)}">
+            <i class="ti ti-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="arrivals-list" id="arrivals-${safeId}">
+          <div class="loading-msg">Loading arrivals…</div>
+        </div>`;
+      el.appendChild(card);
+      loadArrivals(stop.id);
+    });
+  }
+
+  function removeStop(id) {
+    savedStops = savedStops.filter(s => s.id !== id);
+    saveStops();
+    renderSaved();
+  }
+
+  // ── ARRIVALS ──────────────────────────────────────────────────────────────
+  async function loadArrivals(stopId) {
+    const safeId = stopId.replace(/\W/g, '_');
+    const el = document.getElementById('arrivals-' + safeId);
+    if (!el) return;
+    try {
+      const url = `${OBA_BASE}/arrivals-and-departures-for-stop/${encodeURIComponent(stopId)}.json?key=${OBA_KEY}&minutesAfter=${MINUTES_AHEAD}&minutesBefore=0`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const arr = (data?.data?.entry?.arrivalsAndDepartures || []);
+      if (!arr.length) {
+        el.innerHTML = `<div class="no-arrivals">No departures in the next ${MINUTES_AHEAD} minutes.</div>`;
+        return;
+      }
+      const now = Date.now();
+      const rows = arr.slice(0, 10).map(a => {
+        const t = a.predictedDepartureTime || a.scheduledDepartureTime;
+        const mins = Math.round((t - now) / 60000);
+        const isLive = !!a.predictedDepartureTime;
+        const timeStr = mins <= 0 ? 'Now' : mins === 1 ? '1 min' : `${mins} min`;
+        const timeClass = mins <= 1 ? 'soon' : mins <= 5 ? 'coming' : '';
+        const routeLabel = a.routeShortName || (a.routeId || '').split('_').pop() || '?';
+        return `<div class="arrival-row">
+          <span class="route-badge">${escHtml(routeLabel)}</span>
+          <span class="arrival-dest" title="${escHtml(a.tripHeadsign || '')}">${escHtml(a.tripHeadsign || 'Unknown')}</span>
+          <div class="arrival-right">
+            <div class="arrival-time ${timeClass}">${timeStr}</div>
+            <div class="arrival-type ${isLive ? 'live' : ''}">${isLive ? 'live' : 'sched'}</div>
+          </div>
+        </div>`;
+      }).join('');
+      el.innerHTML = rows;
+    } catch (e) {
+      el.innerHTML = `<div class="no-arrivals"><i class="ti ti-alert-circle" aria-hidden="true"></i> Couldn't load arrivals — ${e.message}</div>`;
+    }
+  }
+
+  async function refreshAll() {
+    if (!savedStops.length) return;
+    savedStops.forEach(s => {
+      const safeId = s.id.replace(/\W/g, '_');
+      const el = document.getElementById('arrivals-' + safeId);
+      if (el) el.innerHTML = '<div class="loading-msg">Refreshing…</div>';
+      loadArrivals(s.id);
+    });
+    const now = new Date();
+    document.getElementById('last-updated').textContent =
+      `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+  }
+
+  // ── STOP SEARCH ──────────────────────────────────────────────────────────
+  async function searchStops() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+    const el = document.getElementById('search-results');
+    el.innerHTML = '<div class="status-bar">Searching…</div>';
+    try {
+      const url = `${OBA_BASE}/stops-for-location.json?key=${OBA_KEY}&query=${encodeURIComponent(q)}&radius=1200`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const stops = data?.data?.list || [];
+      if (!stops.length) {
+        el.innerHTML = '<div class="status-bar">No stops found — try a broader search.</div>';
+        return;
+      }
+      const wrap = document.createElement('div');
+      wrap.className = 'search-results-list';
+      stops.slice(0, 15).forEach(stop => {
+        const row = document.createElement('div');
+        row.className = 'search-result-item';
+        const alreadySaved = savedStops.some(s => s.id === stop.id);
+        row.innerHTML = `
+          <div>
+            <div class="result-name">${escHtml(stop.name)}</div>
+            <div class="result-meta">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
+          </div>
+          ${alreadySaved
+            ? '<span style="font-size:12px;color:var(--text-muted)">Saved</span>'
+            : '<i class="ti ti-plus" aria-hidden="true" style="color:var(--text-muted)"></i>'}`;
+        if (!alreadySaved) {
+          row.onclick = () => {
+            addStop(stop.id, stop.name, stop.direction || '');
+          };
+        } else {
+          row.style.cursor = 'default';
+        }
+        wrap.appendChild(row);
+      });
+      el.innerHTML = '';
+      el.appendChild(wrap);
+    } catch (e) {
+      el.innerHTML = `<div class="status-bar">Search failed — ${e.message}</div>`;
+    }
+  }
+
+  async function addByStopId() {
+    const raw = document.getElementById('stopid-input').value.trim();
+    if (!raw) return;
+    const id = raw.includes('_') ? raw : '1_' + raw;
+    if (savedStops.some(s => s.id === id)) {
+      switchTab('saved');
+      return;
+    }
+    try {
+      const res = await fetch(`${OBA_BASE}/stop/${encodeURIComponent(id)}.json?key=${OBA_KEY}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const stop = data?.data?.entry;
+      if (!stop) { alert('Stop not found. Check the ID and try again.'); return; }
+      addStop(stop.id, stop.name, stop.direction || '');
+      document.getElementById('stopid-input').value = '';
+    } catch (e) {
+      alert(`Couldn't look up stop: ${e.message}`);
+    }
+  }
+
+  function addStop(id, name, direction) {
+    if (!savedStops.some(s => s.id === id)) {
+      savedStops.push({ id, name, direction });
+      saveStops();
+    }
+    switchTab('saved');
+  }
+
+  // ── UTILS ─────────────────────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  if (autoRefreshOn) {
+    document.getElementById('auto-refresh-toggle').classList.add('on');
+    startAutoRefresh();
+  }
+  renderSaved();
+  if (savedStops.length) refreshAll();
+</script>
+</body>
+</html>
