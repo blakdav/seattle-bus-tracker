@@ -210,6 +210,7 @@
     <button class="tab active" role="tab" onclick="switchTab('saved')"><i class="ti ti-star" aria-hidden="true"></i> My stops</button>
     <button class="tab" role="tab" onclick="switchTab('search')"><i class="ti ti-search" aria-hidden="true"></i> Find a stop</button>
     <button class="tab" role="tab" onclick="switchTab('byid')"><i class="ti ti-hash" aria-hidden="true"></i> Stop ID</button>
+    <button class="tab" role="tab" onclick="switchTab('settings')"><i class="ti ti-settings" aria-hidden="true"></i> Settings</button>
   </div>
 
   <!-- My Stops -->
@@ -244,19 +245,31 @@
       <a href="https://pugetsound.onebusaway.org" target="_blank" rel="noopener">OBA app</a> or by clicking a stop on the map.
     </p>
   </div>
+
+  <!-- Settings -->
+  <div id="tab-settings" class="tab-hidden">
+    <p class="section-label">API key</p>
+    <div class="search-row">
+      <input type="text" id="api-key-input" placeholder="Paste your OBA API key here" />
+      <button onclick="saveApiKey()">Save</button>
+    </div>
+    <p class="hint">Get a free key by emailing <a href="mailto:oba_api_key@soundtransit.org">oba_api_key@soundtransit.org</a>. The key is stored in your browser's localStorage and never sent anywhere except the OBA API.</p>
+    <div id="api-key-status" style="margin-top: 12px; font-size: 13px;"></div>
+  </div>
 </main>
 
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────────────────
-  const OBA_KEY = 'TEST'; // Replace with your free key from api.pugetsound.onebusaway.org
+  let OBA_KEY = localStorage.getItem('oba_api_key') || 'TEST';
   const OBA_BASE = 'https://api.pugetsound.onebusaway.org/api/where';
   const MINUTES_AHEAD = 60;
   const AUTO_REFRESH_INTERVAL = 30; // seconds
   // ────────────────────────────────────────────────────────────────────────────
 
-  if (OBA_KEY !== 'TEST') {
-    document.getElementById('api-key-banner').style.display = 'none';
+  function updateBanner() {
+    document.getElementById('api-key-banner').style.display = OBA_KEY !== 'TEST' ? 'none' : '';
   }
+  updateBanner();
 
   let savedStops = JSON.parse(localStorage.getItem('oba_saved_stops') || '[]');
   let autoRefreshTimer = null;
@@ -270,12 +283,13 @@
   // ── TABS ────────────────────────────────────────────────────────────────────
   function switchTab(tab) {
     activeTab = tab;
-    const ids = ['saved', 'search', 'byid'];
+    const ids = ['saved', 'search', 'byid', 'settings'];
     ids.forEach((id, i) => {
       document.getElementById('tab-' + id).classList.toggle('tab-hidden', id !== tab);
       document.querySelectorAll('.tab')[i].classList.toggle('active', id === tab);
     });
     if (tab === 'saved') renderSaved();
+    if (tab === 'settings') { const inp = document.getElementById('api-key-input'); if (inp) inp.value = OBA_KEY !== 'TEST' ? OBA_KEY : ''; }
   }
 
   // ── AUTO REFRESH ─────────────────────────────────────────────────────────
@@ -466,6 +480,20 @@
       savedStops.push({ id, name, direction });
       saveStops();
     }
+    switchTab('saved');
+  }
+
+  // ── SETTINGS ──────────────────────────────────────────────────────────────
+  function saveApiKey() {
+    const val = document.getElementById('api-key-input').value.trim();
+    if (!val) return;
+    OBA_KEY = val;
+    localStorage.setItem('oba_api_key', val);
+    updateBanner();
+    const status = document.getElementById('api-key-status');
+    status.style.color = 'var(--success-text)';
+    status.textContent = 'Key saved. Refreshing stops...';
+    setTimeout(() => { status.textContent = ''; }, 3000);
     switchTab('saved');
   }
 
