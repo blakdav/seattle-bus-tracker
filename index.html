@@ -175,7 +175,7 @@
     }
     .api-key-banner i { margin-top: 1px; flex-shrink: 0; }
 
-    #tab-search, #tab-byid { display: none; }
+    .tab-hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -222,7 +222,7 @@
   </div>
 
   <!-- Find a Stop -->
-  <div id="tab-search">
+  <div id="tab-search" class="tab-hidden">
     <p class="section-label">Search by name or intersection</p>
     <div class="search-row">
       <input type="text" id="search-input" placeholder="e.g. Pike & 3rd, Westlake Station, Capitol Hill"
@@ -233,7 +233,7 @@
   </div>
 
   <!-- By Stop ID -->
-  <div id="tab-byid">
+  <div id="tab-byid" class="tab-hidden">
     <p class="section-label">Enter OneBusAway stop ID</p>
     <div class="search-row">
       <input type="text" id="stopid-input" placeholder="e.g. 1_29275"
@@ -272,7 +272,7 @@
     activeTab = tab;
     const ids = ['saved', 'search', 'byid'];
     ids.forEach((id, i) => {
-      document.getElementById('tab-' + id).style.display = id === tab ? '' : 'none';
+      document.getElementById('tab-' + id).classList.toggle('tab-hidden', id !== tab);
       document.querySelectorAll('.tab')[i].classList.toggle('active', id === tab);
     });
     if (tab === 'saved') renderSaved();
