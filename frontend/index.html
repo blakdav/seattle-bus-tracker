@@ -260,7 +260,15 @@
 
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────────────────
-  let OBA_KEY = localStorage.getItem('oba_api_key') || 'TEST';
+  let OBA_KEY = 'TEST';
+  async function loadApiKey() {
+    try {
+      const res = await fetch('/api/config');
+      const cfg = await res.json();
+      if (cfg.apiKey) OBA_KEY = cfg.apiKey;
+    } catch(e) {}
+    updateBanner();
+  }
   const OBA_BASE = 'https://api.pugetsound.onebusaway.org/api/where';
   const MINUTES_AHEAD = 60;
   const AUTO_REFRESH_INTERVAL = 30; // seconds
@@ -271,13 +279,30 @@
   }
   updateBanner();
 
-  let savedStops = JSON.parse(localStorage.getItem('oba_saved_stops') || '[]');
+  let savedStops = [];
   let autoRefreshTimer = null;
   let autoRefreshOn = localStorage.getItem('oba_auto_refresh') === 'true';
   let activeTab = 'saved';
 
-  function saveStops() {
-    localStorage.setItem('oba_saved_stops', JSON.stringify(savedStops));
+  async function loadStopsFromServer() {
+    try {
+      const res = await fetch('/api/stops');
+      savedStops = await res.json();
+    } catch(e) {
+      console.error('Could not load stops from server:', e);
+    }
+  }
+
+  async function saveStops() {
+    try {
+      await fetch('/api/stops', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(savedStops)
+      });
+    } catch(e) {
+      console.error('Could not save stops to server:', e);
+    }
   }
 
   // ── TABS ────────────────────────────────────────────────────────────────────
@@ -484,11 +509,17 @@
   }
 
   // ── SETTINGS ──────────────────────────────────────────────────────────────
-  function saveApiKey() {
+  async function saveApiKey() {
     const val = document.getElementById('api-key-input').value.trim();
     if (!val) return;
     OBA_KEY = val;
-    localStorage.setItem('oba_api_key', val);
+    try {
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: val })
+      });
+    } catch(e) {}
     updateBanner();
     const status = document.getElementById('api-key-status');
     status.style.color = 'var(--success-text)';
@@ -507,8 +538,10 @@
     document.getElementById('auto-refresh-toggle').classList.add('on');
     startAutoRefresh();
   }
-  renderSaved();
-  if (savedStops.length) refreshAll();
+  loadApiKey().then(() => loadStopsFromServer()).then(() => {
+    renderSaved();
+    if (savedStops.length) refreshAll();
+  });
 </script>
 </body>
 </html>
