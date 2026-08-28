@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Seattle Bus Tracker</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
   <style>
@@ -83,14 +83,14 @@
       align-items: center;
       justify-content: center;
       gap: 3px;
-      padding: 8px 0 10px;
+      padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
       font-size: 11px;
       color: var(--text-muted);
       border: none;
       background: transparent;
       cursor: pointer;
       font-family: var(--font);
-      height: 56px;
+      height: calc(56px + env(safe-area-inset-bottom));
     }
     .nav-tab i { font-size: 20px; }
     .nav-tab.active { color: var(--accent); }
@@ -473,6 +473,7 @@
   let autoRefreshTimer = null;
   let editingGroupId = null;
   let selectedStopIds = new Set();
+  let selectedRouteFilters = {}; // stopId -> comma-separated route numbers
 
   // ── INIT ──────────────────────────────────────────────────────────────────
   async function init() {
@@ -627,7 +628,7 @@
         </div>
         <div class="arrivals-list" id="arrivals-${safeId}"><div class="no-arrivals">Loading…</div></div>`;
       container.appendChild(card);
-      loadArrivals(stop.id);
+      loadArrivals(stop.id, activeGroup.routeFilters?.[stop.id]);
     });
     const now = new Date();
     document.getElementById('last-updated').textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
@@ -650,15 +651,25 @@
     } catch(e) {}
   }
 
-  async function loadArrivals(stopId) {
+  async function loadArrivals(stopId, routeFilter) {
     const safeId = stopId.replace(/\W/g, '_');
     const el = document.getElementById('arrivals-' + safeId);
     if (!el) return;
+    // Parse route filter into a Set of uppercase route numbers
+    const allowedRoutes = routeFilter
+      ? new Set(routeFilter.split(',').map(r => r.trim().toUpperCase()).filter(Boolean))
+      : null;
     try {
       const res = await fetch(`${OBA_BASE}/arrivals-and-departures-for-stop/${encodeURIComponent(stopId)}.json?key=${OBA_KEY}&minutesAfter=60&minutesBefore=0`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const arr = data?.data?.entry?.arrivalsAndDepartures || [];
+      let arr = data?.data?.entry?.arrivalsAndDepartures || [];
+      if (allowedRoutes) {
+        arr = arr.filter(a => {
+          const route = (a.routeShortName || (a.routeId || '').split('_').pop() || '').toUpperCase();
+          return allowedRoutes.has(route);
+        });
+      }
       if (!arr.length) { el.innerHTML = '<div class="no-arrivals">No departures in the next hour.</div>'; return; }
       const now = Date.now();
       el.innerHTML = arr.slice(0, 10).map(a => {
@@ -815,6 +826,7 @@
   function openNewGroupModal() {
     editingGroupId = null;
     selectedStopIds = new Set();
+    selectedRouteFilters = {};
     document.getElementById('modal-title').textContent = 'New group';
     document.getElementById('group-name-input').value = '';
     renderStopPicker();
@@ -826,6 +838,7 @@
     if (!group) return;
     editingGroupId = id;
     selectedStopIds = new Set(group.stopIds);
+    selectedRouteFilters = group.routeFilters || {};
     document.getElementById('modal-title').textContent = 'Edit group';
     document.getElementById('group-name-input').value = group.name;
     renderStopPicker();
@@ -845,16 +858,28 @@
     el.innerHTML = '';
     stops.forEach(stop => {
       const checked = selectedStopIds.has(stop.id);
+      const safeId = stop.id.replace(/\W/g,'_');
+      const existingRoutes = selectedRouteFilters[stop.id] || '';
       const row = document.createElement('div');
       row.className = 'stop-picker-item';
-      row.innerHTML = `<div class="stop-picker-check ${checked ? 'checked' : ''}" id="check-${stop.id.replace(/\W/g,'_')}">
-        ${checked ? '<i class="ti ti-check" style="font-size:12px"></i>' : ''}
+      row.style.flexDirection = 'column';
+      row.style.alignItems = 'flex-start';
+      row.style.gap = '8px';
+      row.innerHTML = `<div style="display:flex;align-items:center;gap:10px;width:100%;cursor:pointer" onclick="toggleStopPick('${stop.id}')">
+        <div class="stop-picker-check ${checked ? 'checked' : ''}" id="check-${safeId}">
+          ${checked ? '<i class="ti ti-check" style="font-size:12px"></i>' : ''}
+        </div>
+        <div>
+          <div style="font-size:14px">${escHtml(stop.name)}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
+        </div>
       </div>
-      <div>
-        <div style="font-size:14px">${escHtml(stop.name)}</div>
-        <div style="font-size:12px;color:var(--text-muted)">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
+      <div id="route-filter-row-${safeId}" style="padding-left:30px;width:100%;${checked ? '' : 'display:none'}">
+        <input type="text" id="route-filter-${safeId}" placeholder="Filter routes, e.g. 48, 3, 4 (blank = all)"
+          value="${escHtml(existingRoutes)}"
+          onclick="event.stopPropagation()"
+          style="font-size:13px;height:32px" />
       </div>`;
-      row.onclick = () => toggleStopPick(stop.id);
       el.appendChild(row);
     });
   }
@@ -862,14 +887,17 @@
   function toggleStopPick(id) {
     const safeId = id.replace(/\W/g, '_');
     const el = document.getElementById('check-' + safeId);
+    const filterRow = document.getElementById('route-filter-row-' + safeId);
     if (selectedStopIds.has(id)) {
       selectedStopIds.delete(id);
       el.classList.remove('checked');
       el.innerHTML = '';
+      if (filterRow) filterRow.style.display = 'none';
     } else {
       selectedStopIds.add(id);
       el.classList.add('checked');
       el.innerHTML = '<i class="ti ti-check" style="font-size:12px"></i>';
+      if (filterRow) filterRow.style.display = '';
     }
   }
 
@@ -877,11 +905,18 @@
     const name = document.getElementById('group-name-input').value.trim();
     if (!name) { alert('Please enter a group name.'); return; }
     if (!selectedStopIds.size) { alert('Please select at least one stop.'); return; }
+    // Collect route filters from inputs
+    const routeFilters = {};
+    selectedStopIds.forEach(stopId => {
+      const safeId = stopId.replace(/\W/g, '_');
+      const inp = document.getElementById('route-filter-' + safeId);
+      if (inp && inp.value.trim()) routeFilters[stopId] = inp.value.trim();
+    });
     if (editingGroupId) {
-      groups = groups.map(g => g.id === editingGroupId ? { ...g, name, stopIds: [...selectedStopIds] } : g);
+      groups = groups.map(g => g.id === editingGroupId ? { ...g, name, stopIds: [...selectedStopIds], routeFilters } : g);
       if (activeGroup?.id === editingGroupId) activeGroup = groups.find(g => g.id === editingGroupId);
     } else {
-      groups.push({ id: Date.now().toString(36), name, stopIds: [...selectedStopIds] });
+      groups.push({ id: Date.now().toString(36), name, stopIds: [...selectedStopIds], routeFilters });
     }
     await saveGroups();
     closeGroupModal();
