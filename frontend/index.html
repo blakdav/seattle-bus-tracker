@@ -684,6 +684,13 @@
           return allowedRoutes.has(route);
         });
       }
+      // Deduplicate by tripId
+      const seenTrips = new Set();
+      arr = arr.filter(a => {
+        if (!a.tripId || seenTrips.has(a.tripId)) return false;
+        seenTrips.add(a.tripId);
+        return true;
+      });
       if (!arr.length) { el.innerHTML = '<div class="no-arrivals">No departures in the next hour.</div>'; return; }
       const now = Date.now();
       // If destination stop set, fetch trip details for each arrival in parallel
