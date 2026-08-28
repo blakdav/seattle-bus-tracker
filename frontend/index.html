@@ -318,7 +318,7 @@
     <div class="header-icon"><i class="ti ti-bus"></i></div>
     <div>
       <div class="header-title">Seattle Bus Tracker</div>
-      <div class="header-sub">OneBusAway · Puget Sound</div>
+      <div class="header-sub">OneBusAway · Puget Sound · v3.4</div>
     </div>
   </div>
   <div id="header-refresh" class="tab-hidden">
@@ -879,20 +879,17 @@
       const now = Date.now();
       const serviceDate = data?.data?.entry?.date || 0;
       let stopRouteSchedules = data?.data?.entry?.stopRouteSchedules || [];
-      // serviceDate from OBA is in ms already if > 1e10, else seconds
-      const sdMs = serviceDate > 1e10 ? serviceDate : serviceDate * 1000;
+      const routeRefs = data?.data?.references?.routes || [];
       let trips = [];
       stopRouteSchedules.forEach(srs => {
-        // Try shortName from references first
-        const refs = data?.data?.references?.routes || [];
-        const routeRef = refs.find(r => r.id === srs.routeId);
+        const routeRef = routeRefs.find(r => r.id === srs.routeId);
         const routeShort = routeRef?.shortName || srs.routeId?.split('_').pop() || '';
         if (allowedRoutes && !allowedRoutes.has(routeShort.toUpperCase())) return;
         srs.stopRouteDirectionSchedules?.forEach(srds => {
+          const headsign = srds.tripHeadsign || '';
           srds.scheduleStopTimes?.forEach(sst => {
-            // departureTime is seconds since midnight
-            const depMs = sdMs + sst.departureTime * 1000;
-            trips.push({ routeLabel: routeShort, headsign: srds.tripHeadsign || '', depMs });
+            // arrivalTime is already in ms
+            trips.push({ routeLabel: routeShort, headsign, depMs: sst.departureTime });
           });
         });
       });
