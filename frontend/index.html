@@ -879,13 +879,19 @@
       const now = Date.now();
       const serviceDate = data?.data?.entry?.date || 0;
       let stopRouteSchedules = data?.data?.entry?.stopRouteSchedules || [];
+      // serviceDate from OBA is in ms already if > 1e10, else seconds
+      const sdMs = serviceDate > 1e10 ? serviceDate : serviceDate * 1000;
       let trips = [];
       stopRouteSchedules.forEach(srs => {
-        const routeShort = srs.routeId?.split('_').pop() || '';
+        // Try shortName from references first
+        const refs = data?.data?.references?.routes || [];
+        const routeRef = refs.find(r => r.id === srs.routeId);
+        const routeShort = routeRef?.shortName || srs.routeId?.split('_').pop() || '';
         if (allowedRoutes && !allowedRoutes.has(routeShort.toUpperCase())) return;
         srs.stopRouteDirectionSchedules?.forEach(srds => {
           srds.scheduleStopTimes?.forEach(sst => {
-            const depMs = serviceDate + sst.departureTime * 1000;
+            // departureTime is seconds since midnight
+            const depMs = sdMs + sst.departureTime * 1000;
             trips.push({ routeLabel: routeShort, headsign: srds.tripHeadsign || '', depMs });
           });
         });
