@@ -839,6 +839,92 @@
     }
   }
 
+  // ── SCHEDULE MODE ─────────────────────────────────────────────────────────
+  async function renderSchedule() {
+    if (!activeGroup) return;
+    const container = document.getElementById('arrivals-container');
+    const groupStops = activeGroup.stopIds.map(id => stops.find(s => s.id === id)).filter(Boolean);
+    container.innerHTML = '';
+    for (const stop of groupStops) {
+      const destStopObj = activeGroup.destinationStopId ? stops.find(s => s.id === activeGroup.destinationStopId) : null;
+      const headerName = destStopObj ? `${escHtml(stop.name)} → ${escHtml(destStopObj.name)}` : escHtml(stop.name);
+      const card = document.createElement('div');
+      card.className = 'stop-card';
+      const safeId = stop.id.replace(/\W/g, '_');
+      card.innerHTML = `
+        <div class="stop-card-header">
+          <div class="stop-name">${headerName}</div>
+          <div class="stop-meta">
+            <span class="stop-id-pill">${escHtml(stop.id)}</span>
+            ${stop.direction ? `<span class="stop-dir">${escHtml(stop.direction)} bound</span>` : ''}
+          </div>
+        </div>
+        <div class="arrivals-list" id="sched-${safeId}"><div class="no-arrivals">Loading schedule…</div></div>`;
+      container.appendChild(card);
+      loadSchedule(stop.id, activeGroup.routeFilters?.[stop.id]);
+    }
+  }
+
+  async function loadSchedule(stopId, routeFilter) {
+    const safeId = stopId.replace(/\W/g, '_');
+    const el = document.getElementById('sched-' + safeId);
+    if (!el) return;
+    const allowedRoutes = routeFilter
+      ? new Set(routeFilter.split(',').map(r => r.trim().toUpperCase()).filter(Boolean))
+      : null;
+    try {
+      const res = await fetch(`/api/schedule/${encodeURIComponent(stopId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const now = Date.now();
+      const serviceDate = data?.data?.entry?.date || 0;
+      let stopRouteSchedules = data?.data?.entry?.stopRouteSchedules || [];
+      let trips = [];
+      stopRouteSchedules.forEach(srs => {
+        const routeShort = srs.routeId?.split('_').pop() || '';
+        if (allowedRoutes && !allowedRoutes.has(routeShort.toUpperCase())) return;
+        srs.stopRouteDirectionSchedules?.forEach(srds => {
+          srds.scheduleStopTimes?.forEach(sst => {
+            const depMs = serviceDate + sst.departureTime * 1000;
+            trips.push({ routeLabel: routeShort, headsign: srds.tripHeadsign || '', depMs });
+          });
+        });
+      });
+      trips.sort((a, b) => a.depMs - b.depMs);
+      if (!trips.length) { el.innerHTML = '<div class="no-arrivals">No service today.</div>'; return; }
+      const upcoming = trips.filter(t => t.depMs >= now - 60000);
+      const past = trips.filter(t => t.depMs < now - 60000);
+      let html = upcoming.map(t => {
+        const timeStr = new Date(t.depMs).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        return `<div class="arrival-row">
+          <span class="route-badge">${escHtml(t.routeLabel)}</span>
+          <span class="arrival-dest">${escHtml(t.headsign)}</span>
+          <div class="arrival-right">
+            <div class="arrival-time">${timeStr}</div>
+            <div class="arrival-type sched-badge">sched</div>
+          </div>
+        </div>`;
+      }).join('');
+      if (past.length) {
+        html += `<div class="sched-header">Earlier today</div>`;
+        html += past.slice(-5).map(t => {
+          const timeStr = new Date(t.depMs).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          return `<div class="arrival-row sched-row">
+            <span class="route-badge">${escHtml(t.routeLabel)}</span>
+            <span class="arrival-dest">${escHtml(t.headsign)}</span>
+            <div class="arrival-right">
+              <div class="arrival-time">${timeStr}</div>
+              <div class="arrival-type sched-badge">sched</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+      el.innerHTML = html;
+    } catch(e) {
+      el.innerHTML = `<div class="no-arrivals">Couldn't load schedule — ${e.message}</div>`;
+    }
+  }
+
   // ── AUTO REFRESH ──────────────────────────────────────────────────────────
   function startAutoRefresh() {
     stopAutoRefresh();
