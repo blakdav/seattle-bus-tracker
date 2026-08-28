@@ -156,6 +156,7 @@
     .sched-badge { font-size: 11px; color: var(--text-muted); }
     .delay-late { font-size: 11px; color: var(--danger); }
     .delay-early { font-size: 11px; color: var(--success-text); }
+    .dest-eta { font-size: 11px; color: var(--accent-text); margin-top: 2px; }
     .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 6px 0; }
 
     /* Toolbar */
@@ -459,8 +460,14 @@
       <input type="text" id="group-name-input" placeholder="e.g. Morning commute" />
     </div>
     <div class="form-group">
-      <label class="form-label">Select stops</label>
+      <label class="form-label">Origin stops</label>
       <div id="stop-picker-list"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Destination stop (optional — shows arrival ETA per trip)</label>
+      <select id="destination-stop-select" style="margin-top:4px">
+        <option value="">None</option>
+      </select>
     </div>
     <div class="modal-actions">
       <button onclick="closeGroupModal()">Cancel</button>
@@ -635,7 +642,7 @@
         </div>
         <div class="arrivals-list" id="arrivals-${safeId}"><div class="no-arrivals">Loading…</div></div>`;
       container.appendChild(card);
-      loadArrivals(stop.id, activeGroup.routeFilters?.[stop.id]);
+      loadArrivals(stop.id, activeGroup.routeFilters?.[stop.id], activeGroup.destinationStopId);
     });
     const now = new Date();
     document.getElementById('last-updated').textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
@@ -658,7 +665,7 @@
     } catch(e) {}
   }
 
-  async function loadArrivals(stopId, routeFilter) {
+  async function loadArrivals(stopId, routeFilter, destinationStopId) {
     const safeId = stopId.replace(/\W/g, '_');
     const el = document.getElementById('arrivals-' + safeId);
     if (!el) return;
@@ -679,6 +686,29 @@
       }
       if (!arr.length) { el.innerHTML = '<div class="no-arrivals">No departures in the next hour.</div>'; return; }
       const now = Date.now();
+      // If destination stop set, fetch trip details for each arrival in parallel
+      let tripDestTimes = {};
+      if (destinationStopId) {
+        const tripIds = [...new Set(arr.slice(0,10).map(a => a.tripId).filter(Boolean))];
+        await Promise.all(tripIds.map(async tripId => {
+          try {
+            const tr = await fetch(`${OBA_BASE}/trip-details/${encodeURIComponent(tripId)}.json?key=${OBA_KEY}&includeSchedule=true`);
+            if (!tr.ok) return;
+            const td = await tr.json();
+            const stopTimes = td?.data?.entry?.schedule?.stopTimes || [];
+            const destStop = stopTimes.find(st => st.stopId === destinationStopId);
+            if (destStop) {
+              // preferredArrivalTime is seconds from midnight; use serviceDate + offset
+              const serviceDate = td?.data?.entry?.serviceDate || 0;
+              const arrivalOffset = (destStop.arrivalTime || destStop.departureTime) * 1000;
+              tripDestTimes[tripId] = serviceDate + arrivalOffset;
+            }
+          } catch(e) {}
+        }));
+      }
+
+      const destStop = destinationStopId ? stops.find(s => s.id === destinationStopId) : null;
+
       el.innerHTML = arr.slice(0, 10).map(a => {
         const predicted = a.predictedDepartureTime;
         const scheduled = a.scheduledDepartureTime;
@@ -689,12 +719,17 @@
         const absTime = new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         const timeClass = mins <= 1 ? 'soon' : mins <= 5 ? 'coming' : '';
         const routeLabel = a.routeShortName || (a.routeId || '').split('_').pop() || '?';
-        // Delay: difference between predicted and scheduled in minutes
         let delayStr = '';
         if (isLive && scheduled) {
           const delayMins = Math.round((predicted - scheduled) / 60000);
           if (delayMins >= 2) delayStr = `<span class="delay-late">+${delayMins} late</span>`;
           else if (delayMins <= -2) delayStr = `<span class="delay-early">${Math.abs(delayMins)} early</span>`;
+        }
+        let destEta = '';
+        if (destStop && tripDestTimes[a.tripId]) {
+          const destTime = new Date(tripDestTimes[a.tripId]);
+          const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          destEta = `<div class="dest-eta">→ ${escHtml(destStop.name)} ${destTimeStr}</div>`;
         }
         return `<div class="arrival-row">
           <span class="route-badge">${escHtml(routeLabel)}</span>
@@ -702,6 +737,7 @@
           <div class="arrival-right">
             <div class="arrival-time ${timeClass}">${timeStr} <span class="abs-time">· ${absTime}</span></div>
             <div class="arrival-meta">${isLive ? '<span class="live-badge">live</span>' : '<span class="sched-badge">sched</span>'}${delayStr}</div>
+            ${destEta}
           </div>
         </div>`;
       }).join('');
@@ -859,6 +895,8 @@
     document.getElementById('modal-title').textContent = 'Edit group';
     document.getElementById('group-name-input').value = group.name;
     renderStopPicker();
+    // Set destination after picker renders (which populates the select)
+    document.getElementById('destination-stop-select').value = group.destinationStopId || '';
     document.getElementById('group-modal').classList.remove('hidden');
   }
 
@@ -873,6 +911,18 @@
       return;
     }
     el.innerHTML = '';
+    // Populate destination dropdown
+    const destSelect = document.getElementById('destination-stop-select');
+    const currentDest = destSelect.value;
+    destSelect.innerHTML = '<option value="">None</option>';
+    stops.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      if (s.id === currentDest) opt.selected = true;
+      destSelect.appendChild(opt);
+    });
+
     stops.forEach(stop => {
       const checked = selectedStopIds.has(stop.id);
       const safeId = stop.id.replace(/\W/g,'_');
@@ -929,11 +979,12 @@
       const inp = document.getElementById('route-filter-' + safeId);
       if (inp && inp.value.trim()) routeFilters[stopId] = inp.value.trim();
     });
+    const destinationStopId = document.getElementById('destination-stop-select').value || null;
     if (editingGroupId) {
-      groups = groups.map(g => g.id === editingGroupId ? { ...g, name, stopIds: [...selectedStopIds], routeFilters } : g);
+      groups = groups.map(g => g.id === editingGroupId ? { ...g, name, stopIds: [...selectedStopIds], routeFilters, destinationStopId } : g);
       if (activeGroup?.id === editingGroupId) activeGroup = groups.find(g => g.id === editingGroupId);
     } else {
-      groups.push({ id: Date.now().toString(36), name, stopIds: [...selectedStopIds], routeFilters });
+      groups.push({ id: Date.now().toString(36), name, stopIds: [...selectedStopIds], routeFilters, destinationStopId });
     }
     await saveGroups();
     closeGroupModal();
