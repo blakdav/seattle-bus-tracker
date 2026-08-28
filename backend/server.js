@@ -49,4 +49,29 @@ app.post('/api/config', (req, res) => {
   res.json({ ok: true });
 });
 
+// Trip details cache (in-memory, keyed by tripId, TTL 4 hours)
+const tripCache = {};
+const TRIP_CACHE_TTL = 4 * 60 * 60 * 1000;
+
+app.get('/api/trip-details/:tripId', async (req, res) => {
+  const { tripId } = req.params;
+  const cached = tripCache[tripId];
+  if (cached && Date.now() - cached.timestamp < TRIP_CACHE_TTL) {
+    return res.json(cached.data);
+  }
+  const config = readJson(CONFIG_FILE, {});
+  const apiKey = config.apiKey || 'TEST';
+  try {
+    const response = await fetch(
+      `https://api.pugetsound.onebusaway.org/api/where/trip-details/${encodeURIComponent(tripId)}.json?key=${apiKey}&includeSchedule=true`
+    );
+    if (!response.ok) return res.status(response.status).json({ error: 'OBA error' });
+    const data = await response.json();
+    tripCache[tripId] = { data, timestamp: Date.now() };
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`Bus tracker API running on port ${PORT}`));

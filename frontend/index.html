@@ -157,6 +157,7 @@
     .delay-late { font-size: 11px; color: var(--danger); }
     .delay-early { font-size: 11px; color: var(--success-text); }
     .dest-eta { font-size: 11px; color: var(--accent-text); margin-top: 2px; }
+    .dest-eta-loading { color: var(--text-muted); }
     .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 6px 0; }
 
     /* Toolbar */
@@ -364,6 +365,7 @@
              onkeydown="if(event.key==='Enter') addByStopId()" />
       <button onclick="addByStopId()">Add</button>
     </div>
+    <p class="hint">Look up stop IDs at <a href="https://pugetsound.onebusaway.org/" target="_blank" rel="noopener">pugetsound.onebusaway.org</a>.</p>
 
     <div style="margin-top: 1.5rem;">
       <p class="section-label">Saved stops</p>
@@ -699,7 +701,7 @@
         const tripIds = [...new Set(arr.slice(0,10).map(a => a.tripId).filter(Boolean))];
         await Promise.all(tripIds.map(async tripId => {
           try {
-            const tr = await fetch(`${OBA_BASE}/trip-details/${encodeURIComponent(tripId)}.json?key=${OBA_KEY}&includeSchedule=true`);
+            const tr = await fetch(`/api/trip-details/${encodeURIComponent(tripId)}`);
             if (!tr.ok) return;
             const td = await tr.json();
             const stopTimes = td?.data?.entry?.schedule?.stopTimes || [];
@@ -715,6 +717,38 @@
       }
 
       const destStop = destinationStopId ? stops.find(s => s.id === destinationStopId) : null;
+
+      // Render immediately with placeholders, then update ETAs as trip details resolve
+      if (destinationStopId && destStop) {
+        const tripIds = [...new Set(arr.slice(0,10).map(a => a.tripId).filter(Boolean))];
+        tripIds.forEach(async tripId => {
+          try {
+            const tr = await fetch(`/api/trip-details/${encodeURIComponent(tripId)}`);
+            if (!tr.ok) return;
+            const td = await tr.json();
+            const stopTimes = td?.data?.entry?.schedule?.stopTimes || [];
+            const destStopTime = stopTimes.find(st => st.stopId === destinationStopId);
+            if (destStopTime) {
+              const serviceDate = td?.data?.entry?.serviceDate || 0;
+              const arrivalOffset = (destStopTime.arrivalTime || destStopTime.departureTime) * 1000;
+              tripDestTimes[tripId] = serviceDate + arrivalOffset;
+              // Update all rows that use this tripId
+              arr.filter(a => a.tripId === tripId).forEach(a => {
+                const predicted = a.predictedDepartureTime;
+                const scheduled = a.scheduledDepartureTime;
+                const delayMs = (predicted && scheduled) ? (predicted - scheduled) : 0;
+                const destTime = new Date(tripDestTimes[tripId] + delayMs);
+                const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                const etaEl = document.getElementById('dest-eta-' + tripId.replace(/\W/g,'_'));
+                if (etaEl) {
+                  etaEl.className = 'dest-eta';
+                  etaEl.textContent = '→ ' + destStop.name + ' ' + destTimeStr;
+                }
+              });
+            }
+          } catch(e) {}
+        });
+      }
 
       el.innerHTML = arr.slice(0, 10).map(a => {
         const predicted = a.predictedDepartureTime;
@@ -733,12 +767,15 @@
           else if (delayMins <= -2) delayStr = `<span class="delay-early">${Math.abs(delayMins)} early</span>`;
         }
         let destEta = '';
-        if (destStop && tripDestTimes[a.tripId]) {
-          // Apply the same delay offset as the departure
-          const delayMs = (isLive && scheduled) ? (predicted - scheduled) : 0;
-          const destTime = new Date(tripDestTimes[a.tripId] + delayMs);
-          const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-          destEta = `<div class="dest-eta">→ ${escHtml(destStop.name)} ${destTimeStr}</div>`;
+        if (destStop) {
+          if (tripDestTimes[a.tripId]) {
+            const delayMs = (isLive && scheduled) ? (predicted - scheduled) : 0;
+            const destTime = new Date(tripDestTimes[a.tripId] + delayMs);
+            const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            destEta = `<div class="dest-eta" id="dest-eta-${a.tripId.replace(/\W/g,'_')}">→ ${escHtml(destStop.name)} ${destTimeStr}</div>`;
+          } else {
+            destEta = `<div class="dest-eta dest-eta-loading" id="dest-eta-${a.tripId.replace(/\W/g,'_')}">→ ${escHtml(destStop.name)} …</div>`;
+          }
         }
         return `<div class="arrival-row">
           <span class="route-badge">${escHtml(routeLabel)}</span>
