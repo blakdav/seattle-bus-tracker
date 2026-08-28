@@ -12,6 +12,8 @@ COPY --from=backend-build /app/node_modules ./node_modules
 COPY backend/server.js .
 
 COPY frontend/index.html /usr/share/nginx/html/index.html
+COPY frontend/favicon.ico /usr/share/nginx/html/favicon.ico
+COPY frontend/apple-touch-icon.png /usr/share/nginx/html/apple-touch-icon.png
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 RUN mkdir -p /data

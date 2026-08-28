@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Seattle Bus Tracker</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bus Tracker" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -145,6 +150,12 @@
     .arrival-time.coming { color: var(--warning-text); }
     .arrival-type { font-size: 11px; color: var(--text-muted); }
     .arrival-type.live { color: var(--success-text); }
+    .abs-time { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+    .arrival-meta { display: flex; gap: 5px; justify-content: flex-end; align-items: center; margin-top: 2px; }
+    .live-badge { font-size: 11px; color: var(--success-text); }
+    .sched-badge { font-size: 11px; color: var(--text-muted); }
+    .delay-late { font-size: 11px; color: var(--danger); }
+    .delay-early { font-size: 11px; color: var(--success-text); }
     .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 6px 0; }
 
     /* Toolbar */
@@ -669,18 +680,28 @@
       if (!arr.length) { el.innerHTML = '<div class="no-arrivals">No departures in the next hour.</div>'; return; }
       const now = Date.now();
       el.innerHTML = arr.slice(0, 10).map(a => {
-        const t = a.predictedDepartureTime || a.scheduledDepartureTime;
+        const predicted = a.predictedDepartureTime;
+        const scheduled = a.scheduledDepartureTime;
+        const t = predicted || scheduled;
         const mins = Math.round((t - now) / 60000);
-        const isLive = !!a.predictedDepartureTime;
+        const isLive = !!predicted;
         const timeStr = mins <= 0 ? 'Now' : mins === 1 ? '1 min' : `${mins} min`;
+        const absTime = new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         const timeClass = mins <= 1 ? 'soon' : mins <= 5 ? 'coming' : '';
         const routeLabel = a.routeShortName || (a.routeId || '').split('_').pop() || '?';
+        // Delay: difference between predicted and scheduled in minutes
+        let delayStr = '';
+        if (isLive && scheduled) {
+          const delayMins = Math.round((predicted - scheduled) / 60000);
+          if (delayMins >= 2) delayStr = `<span class="delay-late">+${delayMins} late</span>`;
+          else if (delayMins <= -2) delayStr = `<span class="delay-early">${Math.abs(delayMins)} early</span>`;
+        }
         return `<div class="arrival-row">
           <span class="route-badge">${escHtml(routeLabel)}</span>
           <span class="arrival-dest" title="${escHtml(a.tripHeadsign || '')}">${escHtml(a.tripHeadsign || 'Unknown')}</span>
           <div class="arrival-right">
-            <div class="arrival-time ${timeClass}">${timeStr}</div>
-            <div class="arrival-type ${isLive ? 'live' : ''}">${isLive ? 'live' : 'sched'}</div>
+            <div class="arrival-time ${timeClass}">${timeStr} <span class="abs-time">· ${absTime}</span></div>
+            <div class="arrival-meta">${isLive ? '<span class="live-badge">live</span>' : '<span class="sched-badge">sched</span>'}${delayStr}</div>
           </div>
         </div>`;
       }).join('');
