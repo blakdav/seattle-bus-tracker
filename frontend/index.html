@@ -727,7 +727,9 @@
         }
         let destEta = '';
         if (destStop && tripDestTimes[a.tripId]) {
-          const destTime = new Date(tripDestTimes[a.tripId]);
+          // Apply the same delay offset as the departure
+          const delayMs = (isLive && scheduled) ? (predicted - scheduled) : 0;
+          const destTime = new Date(tripDestTimes[a.tripId] + delayMs);
           const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
           destEta = `<div class="dest-eta">→ ${escHtml(destStop.name)} ${destTimeStr}</div>`;
         }
