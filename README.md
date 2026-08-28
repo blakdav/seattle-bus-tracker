@@ -2,14 +2,18 @@
 
 Real-time Seattle bus arrivals using the [OneBusAway Puget Sound API](https://api.pugetsound.onebusaway.org).
 
-Saved stops and API key are stored server-side in `/data` so they persist across devices.
+## Features
+
+- Save stops to a library
+- Group stops into named combos (e.g. "Morning commute", "Home")
+- Tap a group to load arrivals for just those stops
+- Session memory — last selected group auto-loads for 1 hour (configurable)
+- All settings server-side, consistent across devices
 
 ## Setup
 
-Create the data directory on the host:
-
 ```bash
-mkdir -p /opt/bus-tracker/data
+mkdir -p /opt/docker/seattle-bus-tracker/data
 ```
 
 ## Docker Compose
@@ -21,7 +25,7 @@ services:
     container_name: bus-tracker
     restart: unless-stopped
     volumes:
-      - /opt/bus-tracker/data:/data
+      - /opt/docker/seattle-bus-tracker/data:/data
     networks:
       - npm_internal
 
@@ -32,13 +36,10 @@ networks:
 
 ## API Key
 
-Get a free key by emailing `oba_api_key@soundtransit.org`. Once you have it, paste it in the Settings tab in the app — it's saved to the server at `/opt/bus-tracker/data/config.json`.
+Get a free key by emailing `oba_api_key@soundtransit.org`. Add it in the Settings tab — saved server-side at `/data/config.json`.
 
-The `TEST` key works for dev/personal use but is rate-limited.
+## Data files
 
-## Data
-
-Saved stops and config live at `/opt/bus-tracker/data/` on the host:
-
-- `stops.json` — your saved stops
-- `config.json` — API key and other settings
+- `stops.json` — stop library
+- `groups.json` — named groups
+- `config.json` — API key and settings

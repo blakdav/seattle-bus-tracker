@@ -48,51 +48,169 @@
       }
     }
 
-    body {
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding: 0;
-    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text-primary); min-height: 100vh; }
 
     header {
       background: var(--surface);
       border-bottom: 0.5px solid var(--border);
-      padding: 0 1.5rem;
+      padding: 0 1.25rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 56px;
+      height: 52px;
       position: sticky;
       top: 0;
       z-index: 10;
     }
-
     .header-left { display: flex; align-items: center; gap: 10px; }
-    .header-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
-    .header-title { font-size: 16px; font-weight: 500; color: var(--text-primary); }
-    .header-sub { font-size: 12px; color: var(--text-muted); }
+    .header-icon { width: 26px; height: 26px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+    .header-title { font-size: 15px; font-weight: 500; }
+    .header-sub { font-size: 11px; color: var(--text-muted); }
 
-    .auto-refresh-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
-    .toggle-track { width: 36px; height: 20px; border-radius: 10px; background: var(--border-strong); cursor: pointer; position: relative; transition: background 0.2s; border: none; }
-    .toggle-track.on { background: var(--accent); }
-    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
-    .toggle-track.on .toggle-thumb { transform: translateX(16px); }
+    /* Bottom nav */
+    nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 0.5px solid var(--border);
+      display: flex;
+      z-index: 10;
+    }
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 8px 0 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-family: var(--font);
+      height: 56px;
+    }
+    .nav-tab i { font-size: 20px; }
+    .nav-tab.active { color: var(--accent); }
 
-    main { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+    main { max-width: 680px; margin: 0 auto; padding: 1.25rem 1rem 5rem; }
 
-    .tabs { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; width: 100%; }
-    .tab { flex: 1; padding: 8px; font-size: 13px; border: none; background: transparent; cursor: pointer; color: var(--text-secondary); font-family: var(--font); transition: background 0.15s; }
-    .tab.active { background: var(--surface); color: var(--text-primary); font-weight: 500; }
-    .tab:not(:last-child) { border-right: 0.5px solid var(--border); }
+    /* Cards / surfaces */
+    .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
 
-    .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    /* Group selection screen */
+    .group-grid { display: flex; flex-direction: column; gap: 10px; }
+    .group-btn {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      text-align: left;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: border-color 0.15s, background 0.15s;
+      width: 100%;
+    }
+    .group-btn:hover { border-color: var(--accent); background: var(--accent-bg); }
+    .group-btn-name { font-size: 16px; font-weight: 500; color: var(--text-primary); }
+    .group-btn-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
-    .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
-    .search-row input { flex: 1; }
+    /* Active group / arrivals view */
+    .active-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .active-group-name { font-size: 18px; font-weight: 500; }
+    .active-group-actions { display: flex; gap: 8px; align-items: center; }
+    .session-expiry { font-size: 12px; color: var(--text-muted); }
 
-    input[type="text"] {
+    .stop-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
+    .stop-card-header { margin-bottom: 8px; }
+    .stop-name { font-size: 14px; font-weight: 500; }
+    .stop-meta { display: flex; gap: 6px; align-items: center; margin-top: 3px; }
+    .stop-id-pill { font-size: 11px; color: var(--text-muted); background: var(--surface-raised); border: 0.5px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: monospace; }
+    .stop-dir { font-size: 12px; color: var(--text-muted); }
+
+    .arrivals-list { display: flex; flex-direction: column; }
+    .arrival-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 0.5px solid var(--border); }
+    .route-badge { font-size: 12px; font-weight: 600; min-width: 44px; text-align: center; padding: 3px 6px; border-radius: 4px; background: var(--accent-bg); color: var(--accent-text); }
+    .arrival-dest { font-size: 13px; color: var(--text-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .arrival-right { text-align: right; min-width: 60px; }
+    .arrival-time { font-size: 13px; font-weight: 500; }
+    .arrival-time.soon { color: var(--danger); }
+    .arrival-time.coming { color: var(--warning-text); }
+    .arrival-type { font-size: 11px; color: var(--text-muted); }
+    .arrival-type.live { color: var(--success-text); }
+    .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 6px 0; }
+
+    /* Toolbar */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .last-updated { font-size: 12px; color: var(--text-muted); }
+
+    /* Stops library */
+    .stop-library-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .stop-library-item:last-child { border-bottom: none; }
+    .stop-library-name { font-size: 14px; }
+    .stop-library-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Groups editor */
+    .group-editor-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .group-editor-item:last-child { border-bottom: none; }
+    .group-editor-name { font-size: 14px; font-weight: 500; }
+    .group-editor-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface);
+      border-radius: 16px 16px 0 0;
+      padding: 1.25rem;
+      width: 100%;
+      max-width: 680px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-title { font-size: 16px; font-weight: 500; margin-bottom: 1rem; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 1rem; justify-content: flex-end; }
+
+    .stop-picker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+      cursor: pointer;
+    }
+    .stop-picker-item:last-child { border-bottom: none; }
+    .stop-picker-check { width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .stop-picker-check.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Form elements */
+    input[type="text"], select {
       height: 36px;
       padding: 0 10px;
       border: 0.5px solid var(--border-strong);
@@ -104,7 +222,7 @@
       outline: none;
       width: 100%;
     }
-    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
+    input[type="text"]:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-bg); }
     input[type="text"]::placeholder { color: var(--text-muted); }
 
     button {
@@ -119,286 +237,431 @@
       cursor: pointer;
       transition: background 0.15s;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
     button:hover { background: var(--surface-raised); }
-    button:active { transform: scale(0.98); }
     button.primary { background: var(--accent); color: #fff; border-color: transparent; }
     button.primary:hover { opacity: 0.9; }
+    button.danger:hover { color: var(--danger); border-color: var(--danger); }
+    button.icon-btn { width: 32px; height: 32px; padding: 0; justify-content: center; }
+
+    .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .search-row input { flex: 1; }
+
+    .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+    .hint a { color: var(--accent-text); }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; }
+    .empty-icon { font-size: 36px; color: var(--text-muted); margin-bottom: 12px; }
+    .empty-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .empty-body { font-size: 13px; color: var(--text-muted); }
+
+    .status-msg { font-size: 13px; color: var(--text-muted); text-align: center; padding: 1rem; }
 
     .search-results-list { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
     .search-result-item { padding: 10px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .search-result-item:last-child { border-bottom: none; }
     .search-result-item:hover { background: var(--surface-raised); }
-    .result-name { font-size: 14px; color: var(--text-primary); }
-    .result-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-    .stop-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; }
-    .stop-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .stop-name { font-size: 15px; font-weight: 500; color: var(--text-primary); line-height: 1.3; }
-    .stop-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-    .stop-id-pill { font-size: 11px; color: var(--text-muted); background: var(--surface-raised); border: 0.5px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: monospace; }
-    .stop-dir { font-size: 12px; color: var(--text-muted); }
+    /* Settings */
+    .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-label { font-size: 14px; }
+    .settings-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-    .btn-icon { height: 28px; width: 28px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; border-radius: var(--radius); }
-    .btn-icon:hover { color: var(--danger); border-color: var(--danger); }
+    .toggle-track { width: 40px; height: 22px; border-radius: 11px; background: var(--border-strong); cursor: pointer; position: relative; border: none; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-track.on { background: var(--accent); }
+    .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+    .toggle-track.on .toggle-thumb { transform: translateX(18px); }
 
-    .arrivals-list { display: flex; flex-direction: column; }
-    .arrival-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 0.5px solid var(--border); }
-    .route-badge { font-size: 12px; font-weight: 600; min-width: 44px; text-align: center; padding: 3px 6px; border-radius: 4px; background: var(--accent-bg); color: var(--accent-text); letter-spacing: 0.01em; }
-    .arrival-dest { font-size: 13px; color: var(--text-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .arrival-right { text-align: right; min-width: 60px; }
-    .arrival-time { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-    .arrival-time.soon { color: var(--danger); }
-    .arrival-time.coming { color: var(--warning-text); }
-    .arrival-type { font-size: 11px; color: var(--text-muted); }
-    .arrival-type.live { color: var(--success-text); }
+    .tab-hidden { display: none !important; }
 
-    .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 8px 0 2px; }
-    .loading-msg { font-size: 13px; color: var(--text-muted); padding: 8px 0 2px; }
-
-    .empty-state { text-align: center; padding: 3rem 1rem; }
-    .empty-icon { font-size: 36px; color: var(--text-muted); margin-bottom: 12px; }
-    .empty-title { font-size: 15px; font-weight: 500; color: var(--text-primary); margin-bottom: 6px; }
-    .empty-body { font-size: 13px; color: var(--text-muted); }
-
-    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-    .last-updated { font-size: 12px; color: var(--text-muted); }
-
-    .hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
-    .hint a { color: var(--accent-text); }
-
-    .status-bar { font-size: 13px; color: var(--text-muted); text-align: center; padding: 1rem; }
-
-    .api-key-banner { background: #faeeda; border: 0.5px solid #efa020; border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1.25rem; font-size: 13px; color: #633806; display: flex; gap: 10px; align-items: flex-start; }
+    .api-key-banner {
+      background: #faeeda; border: 0.5px solid #efa020; border-radius: var(--radius);
+      padding: 10px 14px; margin-bottom: 1.25rem; font-size: 13px; color: #633806;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
     @media (prefers-color-scheme: dark) {
       .api-key-banner { background: #412402; border-color: #854f0b; color: #fac775; }
     }
-    .api-key-banner i { margin-top: 1px; flex-shrink: 0; }
 
-    .tab-hidden { display: none !important; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
   </style>
 </head>
 <body>
 
 <header>
   <div class="header-left">
-    <div class="header-icon"><i class="ti ti-bus" aria-hidden="true"></i></div>
+    <div class="header-icon"><i class="ti ti-bus"></i></div>
     <div>
       <div class="header-title">Seattle Bus Tracker</div>
       <div class="header-sub">OneBusAway · Puget Sound</div>
     </div>
   </div>
-  <div class="auto-refresh-toggle">
-    <span>Auto-refresh</span>
-    <button class="toggle-track" id="auto-refresh-toggle" onclick="toggleAutoRefresh()" aria-label="Toggle auto-refresh">
-      <div class="toggle-thumb"></div>
-    </button>
+  <div id="header-refresh" class="tab-hidden">
+    <span class="last-updated" id="last-updated"></span>
   </div>
 </header>
 
 <main>
-  <!-- API key warning if using TEST key -->
-  <div class="api-key-banner" id="api-key-banner">
-    <i class="ti ti-alert-triangle" aria-hidden="true"></i>
-    <div>Using the public <code>TEST</code> API key — rate-limited. For personal use, get a free key at
-      <a href="https://api.pugetsound.onebusaway.org" target="_blank" rel="noopener">api.pugetsound.onebusaway.org</a>
-      and set <code>OBA_KEY</code> at the top of this file.
+  <div id="api-key-banner" class="api-key-banner tab-hidden">
+    <i class="ti ti-alert-triangle"></i>
+    <div>Using the public <code>TEST</code> key — rate-limited. Add your key in Settings.</div>
+  </div>
+
+  <!-- HOME TAB -->
+  <div id="tab-home">
+    <!-- Group selection -->
+    <div id="view-group-select">
+      <p class="section-label">Select a group</p>
+      <div class="group-grid" id="group-select-list"></div>
+    </div>
+
+    <!-- Active group arrivals -->
+    <div id="view-arrivals" class="tab-hidden">
+      <div class="active-group-header">
+        <div>
+          <div class="active-group-name" id="active-group-name"></div>
+          <div class="session-expiry" id="session-expiry"></div>
+        </div>
+        <div class="active-group-actions">
+          <button onclick="refreshArrivals()"><i class="ti ti-refresh"></i> Refresh</button>
+          <button onclick="clearActiveGroup()"><i class="ti ti-x"></i></button>
+        </div>
+      </div>
+      <div id="arrivals-container"></div>
     </div>
   </div>
 
-  <div class="tabs" role="tablist">
-    <button class="tab active" role="tab" onclick="switchTab('saved')"><i class="ti ti-star" aria-hidden="true"></i> My stops</button>
-    <button class="tab" role="tab" onclick="switchTab('search')"><i class="ti ti-search" aria-hidden="true"></i> Find a stop</button>
-    <button class="tab" role="tab" onclick="switchTab('byid')"><i class="ti ti-hash" aria-hidden="true"></i> Stop ID</button>
-    <button class="tab" role="tab" onclick="switchTab('settings')"><i class="ti ti-settings" aria-hidden="true"></i> Settings</button>
-  </div>
-
-  <!-- My Stops -->
-  <div id="tab-saved">
-    <div class="toolbar">
-      <span class="last-updated" id="last-updated"></span>
-      <button onclick="refreshAll()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button>
-    </div>
-    <div id="saved-stops-container"></div>
-  </div>
-
-  <!-- Find a Stop -->
-  <div id="tab-search" class="tab-hidden">
-    <p class="section-label">Search by name or intersection</p>
+  <!-- STOPS TAB -->
+  <div id="tab-stops" class="tab-hidden">
+    <p class="section-label">Search to add stops</p>
     <div class="search-row">
-      <input type="text" id="search-input" placeholder="e.g. Pike & 3rd, Westlake Station, Capitol Hill"
+      <input type="text" id="search-input" placeholder="e.g. Pike & 3rd, Westlake Station"
              onkeydown="if(event.key==='Enter') searchStops()" />
       <button onclick="searchStops()">Search</button>
     </div>
     <div id="search-results"></div>
-  </div>
 
-  <!-- By Stop ID -->
-  <div id="tab-byid" class="tab-hidden">
-    <p class="section-label">Enter OneBusAway stop ID</p>
-    <div class="search-row">
-      <input type="text" id="stopid-input" placeholder="e.g. 1_29275"
+    <div class="search-row" style="margin-top: 1rem;">
+      <input type="text" id="stopid-input" placeholder="Or enter stop ID directly, e.g. 1_29275"
              onkeydown="if(event.key==='Enter') addByStopId()" />
-      <button onclick="addByStopId()">Add stop</button>
+      <button onclick="addByStopId()">Add</button>
     </div>
-    <p class="hint">Format is <code>1_XXXXX</code>. Find stop IDs in the
-      <a href="https://pugetsound.onebusaway.org" target="_blank" rel="noopener">OBA app</a> or by clicking a stop on the map.
-    </p>
+
+    <div style="margin-top: 1.5rem;">
+      <p class="section-label">Saved stops</p>
+      <div class="card" style="padding: 0;" id="stops-library-list"></div>
+    </div>
   </div>
 
-  <!-- Settings -->
-  <div id="tab-settings" class="tab-hidden">
-    <p class="section-label">API key</p>
-    <div class="search-row">
-      <input type="text" id="api-key-input" placeholder="Paste your OBA API key here" />
-      <button onclick="saveApiKey()">Save</button>
+  <!-- GROUPS TAB -->
+  <div id="tab-groups" class="tab-hidden">
+    <div class="toolbar">
+      <p class="section-label" style="margin:0">Your groups</p>
+      <button class="primary" onclick="openNewGroupModal()"><i class="ti ti-plus"></i> New group</button>
     </div>
-    <p class="hint">Get a free key by emailing <a href="mailto:oba_api_key@soundtransit.org">oba_api_key@soundtransit.org</a>. The key is stored in your browser's localStorage and never sent anywhere except the OBA API.</p>
-    <div id="api-key-status" style="margin-top: 12px; font-size: 13px;"></div>
+    <div id="groups-list"></div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" class="tab-hidden">
+    <div class="card">
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Auto-refresh</div>
+          <div class="settings-sub">Keep arrivals updated automatically</div>
+        </div>
+        <button class="toggle-track" id="auto-refresh-toggle" onclick="toggleSetting('autoRefresh')">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Refresh interval</div>
+          <div class="settings-sub">How often to refresh arrivals</div>
+        </div>
+        <select id="refresh-interval-select" onchange="saveIntervalSetting()" style="width:auto">
+          <option value="30">30s</option>
+          <option value="60" selected>60s</option>
+          <option value="120">2 min</option>
+          <option value="300">5 min</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Session timeout</div>
+          <div class="settings-sub">Reset active group after inactivity</div>
+        </div>
+        <select id="session-timeout-select" onchange="saveTimeoutSetting()" style="width:auto">
+          <option value="30">30 min</option>
+          <option value="60" selected>1 hour</option>
+          <option value="120">2 hours</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.25rem;">
+      <p class="section-label">API key</p>
+      <div class="card">
+        <div class="form-group">
+          <input type="text" id="api-key-input" placeholder="Paste your OBA API key" />
+        </div>
+        <button class="primary" onclick="saveApiKey()">Save key</button>
+        <div id="api-key-status" style="margin-top: 10px; font-size: 13px;"></div>
+        <p class="hint" style="margin-top: 10px;">Get a free key by emailing <a href="mailto:oba_api_key@soundtransit.org">oba_api_key@soundtransit.org</a>.</p>
+      </div>
+    </div>
   </div>
 </main>
 
+<!-- Bottom nav -->
+<nav>
+  <button class="nav-tab active" id="nav-home" onclick="switchTab('home')">
+    <i class="ti ti-bus-stop"></i>
+    <span>Home</span>
+  </button>
+  <button class="nav-tab" id="nav-stops" onclick="switchTab('stops')">
+    <i class="ti ti-map-pin"></i>
+    <span>Stops</span>
+  </button>
+  <button class="nav-tab" id="nav-groups" onclick="switchTab('groups')">
+    <i class="ti ti-layout-list"></i>
+    <span>Groups</span>
+  </button>
+  <button class="nav-tab" id="nav-settings" onclick="switchTab('settings')">
+    <i class="ti ti-settings"></i>
+    <span>Settings</span>
+  </button>
+</nav>
+
+<!-- Group modal -->
+<div class="modal-overlay hidden" id="group-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">New group</div>
+    <div class="form-group">
+      <label class="form-label">Group name</label>
+      <input type="text" id="group-name-input" placeholder="e.g. Morning commute" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Select stops</label>
+      <div id="stop-picker-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button onclick="closeGroupModal()">Cancel</button>
+      <button class="primary" onclick="saveGroup()">Save group</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────────────────
+  const OBA_BASE = 'https://api.pugetsound.onebusaway.org/api/where';
+  const SESSION_KEY = 'oba_active_group';
+  // ────────────────────────────────────────────────────────────────────────────
+
+  // State
   let OBA_KEY = 'TEST';
-  async function loadApiKey() {
+  let stops = [];
+  let groups = [];
+  let settings = { autoRefresh: false, refreshInterval: 60, sessionTimeout: 60 };
+  let activeGroup = null;
+  let autoRefreshTimer = null;
+  let editingGroupId = null;
+  let selectedStopIds = new Set();
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  async function init() {
+    await loadConfig();
+    await Promise.all([loadStops(), loadGroups()]);
+    checkSession();
+    renderHome();
+    applySettings();
+  }
+
+  async function loadConfig() {
     try {
       const res = await fetch('/api/config');
       const cfg = await res.json();
       if (cfg.apiKey) OBA_KEY = cfg.apiKey;
+      if (cfg.autoRefresh !== undefined) settings.autoRefresh = cfg.autoRefresh;
+      if (cfg.refreshInterval) settings.refreshInterval = cfg.refreshInterval;
+      if (cfg.sessionTimeout) settings.sessionTimeout = cfg.sessionTimeout;
     } catch(e) {}
     updateBanner();
   }
-  const OBA_BASE = 'https://api.pugetsound.onebusaway.org/api/where';
-  const MINUTES_AHEAD = 60;
-  const AUTO_REFRESH_INTERVAL = 30; // seconds
-  // ────────────────────────────────────────────────────────────────────────────
 
-  function updateBanner() {
-    document.getElementById('api-key-banner').style.display = OBA_KEY !== 'TEST' ? 'none' : '';
+  async function loadStops() {
+    try { stops = await (await fetch('/api/stops')).json(); } catch(e) { stops = []; }
   }
-  updateBanner();
 
-  let savedStops = [];
-  let autoRefreshTimer = null;
-  let autoRefreshOn = localStorage.getItem('oba_auto_refresh') === 'true';
-  let activeTab = 'saved';
-
-  async function loadStopsFromServer() {
-    try {
-      const res = await fetch('/api/stops');
-      savedStops = await res.json();
-    } catch(e) {
-      console.error('Could not load stops from server:', e);
-    }
+  async function loadGroups() {
+    try { groups = await (await fetch('/api/groups')).json(); } catch(e) { groups = []; }
   }
 
   async function saveStops() {
+    await fetch('/api/stops', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(stops) });
+  }
+
+  async function saveGroups() {
+    await fetch('/api/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(groups) });
+  }
+
+  async function saveConfig(patch) {
+    Object.assign(settings, patch);
+    await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  }
+
+  // ── SESSION ───────────────────────────────────────────────────────────────
+  function checkSession() {
     try {
-      await fetch('/api/stops', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(savedStops)
-      });
-    } catch(e) {
-      console.error('Could not save stops to server:', e);
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const { groupId, timestamp } = JSON.parse(raw);
+      const ageMinutes = (Date.now() - timestamp) / 60000;
+      if (ageMinutes < settings.sessionTimeout) {
+        const group = groups.find(g => g.id === groupId);
+        if (group) activeGroup = group;
+      } else {
+        localStorage.removeItem(SESSION_KEY);
+      }
+    } catch(e) {}
+  }
+
+  function setActiveGroup(group) {
+    activeGroup = group;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ groupId: group.id, timestamp: Date.now() }));
+  }
+
+  function clearActiveGroup() {
+    activeGroup = null;
+    localStorage.removeItem(SESSION_KEY);
+    stopAutoRefresh();
+    renderHome();
+  }
+
+  function touchSession() {
+    if (activeGroup) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ groupId: activeGroup.id, timestamp: Date.now() }));
     }
   }
 
-  // ── TABS ────────────────────────────────────────────────────────────────────
+  // ── TABS ──────────────────────────────────────────────────────────────────
+  let currentTab = 'home';
+
   function switchTab(tab) {
-    activeTab = tab;
-    const ids = ['saved', 'search', 'byid', 'settings'];
-    ids.forEach((id, i) => {
+    currentTab = tab;
+    ['home','stops','groups','settings'].forEach(id => {
       document.getElementById('tab-' + id).classList.toggle('tab-hidden', id !== tab);
-      document.querySelectorAll('.tab')[i].classList.toggle('active', id === tab);
+      document.getElementById('nav-' + id).classList.toggle('active', id === tab);
     });
-    if (tab === 'saved') renderSaved();
-    if (tab === 'settings') { const inp = document.getElementById('api-key-input'); if (inp) inp.value = OBA_KEY !== 'TEST' ? OBA_KEY : ''; }
+    document.getElementById('header-refresh').classList.toggle('tab-hidden', tab !== 'home');
+    if (tab === 'home') renderHome();
+    if (tab === 'stops') renderStopsLibrary();
+    if (tab === 'groups') renderGroups();
+    if (tab === 'settings') renderSettings();
   }
 
-  // ── AUTO REFRESH ─────────────────────────────────────────────────────────
-  function toggleAutoRefresh() {
-    autoRefreshOn = !autoRefreshOn;
-    localStorage.setItem('oba_auto_refresh', autoRefreshOn);
-    const btn = document.getElementById('auto-refresh-toggle');
-    btn.classList.toggle('on', autoRefreshOn);
-    if (autoRefreshOn) startAutoRefresh();
-    else stopAutoRefresh();
+  // ── HOME / ARRIVALS ───────────────────────────────────────────────────────
+  function renderHome() {
+    if (activeGroup) {
+      document.getElementById('view-group-select').classList.add('tab-hidden');
+      document.getElementById('view-arrivals').classList.remove('tab-hidden');
+      document.getElementById('active-group-name').textContent = activeGroup.name;
+      updateSessionExpiry();
+      renderArrivals();
+      if (settings.autoRefresh) startAutoRefresh();
+    } else {
+      document.getElementById('view-arrivals').classList.add('tab-hidden');
+      document.getElementById('view-group-select').classList.remove('tab-hidden');
+      stopAutoRefresh();
+      renderGroupSelect();
+    }
   }
 
-  function startAutoRefresh() {
-    stopAutoRefresh();
-    autoRefreshTimer = setInterval(() => {
-      if (activeTab === 'saved' && savedStops.length) refreshAll();
-    }, AUTO_REFRESH_INTERVAL * 1000);
-  }
-
-  function stopAutoRefresh() {
-    if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
-  }
-
-  // ── RENDER SAVED STOPS ───────────────────────────────────────────────────
-  function renderSaved() {
-    const el = document.getElementById('saved-stops-container');
-    if (!savedStops.length) {
+  function renderGroupSelect() {
+    const el = document.getElementById('group-select-list');
+    if (!groups.length) {
       el.innerHTML = `<div class="empty-state">
-        <div class="empty-icon"><i class="ti ti-bus-stop" aria-hidden="true"></i></div>
-        <div class="empty-title">No saved stops yet</div>
-        <div class="empty-body">Use "Find a stop" to search by name or intersection,<br>or enter a stop ID directly.</div>
+        <div class="empty-icon"><i class="ti ti-layout-list"></i></div>
+        <div class="empty-title">No groups yet</div>
+        <div class="empty-body">Go to Groups to create your first group of stops.</div>
       </div>`;
       return;
     }
     el.innerHTML = '';
-    savedStops.forEach(stop => {
-      const card = document.createElement('div');
-      card.className = 'stop-card';
-      const safeId = stop.id.replace(/\W/g, '_');
-      card.id = 'card-' + safeId;
-      card.innerHTML = `
-        <div class="stop-card-header">
-          <div>
-            <div class="stop-name">${escHtml(stop.name)}</div>
-            <div class="stop-meta">
-              <span class="stop-id-pill">${escHtml(stop.id)}</span>
-              ${stop.direction ? `<span class="stop-dir">${escHtml(stop.direction)} bound</span>` : ''}
-            </div>
-          </div>
-          <button class="btn-icon" onclick="removeStop('${stop.id}')" title="Remove stop" aria-label="Remove ${escHtml(stop.name)}">
-            <i class="ti ti-trash" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="arrivals-list" id="arrivals-${safeId}">
-          <div class="loading-msg">Loading arrivals…</div>
-        </div>`;
-      el.appendChild(card);
-      loadArrivals(stop.id);
+    groups.forEach(g => {
+      const groupStops = g.stopIds.map(id => stops.find(s => s.id === id)).filter(Boolean);
+      const btn = document.createElement('button');
+      btn.className = 'group-btn';
+      btn.innerHTML = `<div class="group-btn-name">${escHtml(g.name)}</div>
+        <div class="group-btn-meta">${groupStops.map(s => escHtml(s.name)).join(' · ')}</div>`;
+      btn.onclick = () => {
+        setActiveGroup(g);
+        renderHome();
+      };
+      el.appendChild(btn);
     });
   }
 
-  function removeStop(id) {
-    savedStops = savedStops.filter(s => s.id !== id);
-    saveStops();
-    renderSaved();
+  function renderArrivals() {
+    if (!activeGroup) return;
+    const container = document.getElementById('arrivals-container');
+    const groupStops = activeGroup.stopIds.map(id => stops.find(s => s.id === id)).filter(Boolean);
+    container.innerHTML = '';
+    groupStops.forEach(stop => {
+      const card = document.createElement('div');
+      card.className = 'stop-card';
+      const safeId = stop.id.replace(/\W/g, '_');
+      card.innerHTML = `
+        <div class="stop-card-header">
+          <div class="stop-name">${escHtml(stop.name)}</div>
+          <div class="stop-meta">
+            <span class="stop-id-pill">${escHtml(stop.id)}</span>
+            ${stop.direction ? `<span class="stop-dir">${escHtml(stop.direction)} bound</span>` : ''}
+          </div>
+        </div>
+        <div class="arrivals-list" id="arrivals-${safeId}"><div class="no-arrivals">Loading…</div></div>`;
+      container.appendChild(card);
+      loadArrivals(stop.id);
+    });
+    const now = new Date();
+    document.getElementById('last-updated').textContent = `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
   }
 
-  // ── ARRIVALS ──────────────────────────────────────────────────────────────
+  async function refreshArrivals() {
+    touchSession();
+    updateSessionExpiry();
+    renderArrivals();
+  }
+
+  function updateSessionExpiry() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const { timestamp } = JSON.parse(raw);
+      const expiresAt = new Date(timestamp + settings.sessionTimeout * 60000);
+      document.getElementById('session-expiry').textContent =
+        `Resets at ${expiresAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } catch(e) {}
+  }
+
   async function loadArrivals(stopId) {
     const safeId = stopId.replace(/\W/g, '_');
     const el = document.getElementById('arrivals-' + safeId);
     if (!el) return;
     try {
-      const url = `${OBA_BASE}/arrivals-and-departures-for-stop/${encodeURIComponent(stopId)}.json?key=${OBA_KEY}&minutesAfter=${MINUTES_AHEAD}&minutesBefore=0`;
-      const res = await fetch(url);
+      const res = await fetch(`${OBA_BASE}/arrivals-and-departures-for-stop/${encodeURIComponent(stopId)}.json?key=${OBA_KEY}&minutesAfter=60&minutesBefore=0`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const arr = (data?.data?.entry?.arrivalsAndDepartures || []);
-      if (!arr.length) {
-        el.innerHTML = `<div class="no-arrivals">No departures in the next ${MINUTES_AHEAD} minutes.</div>`;
-        return;
-      }
+      const arr = data?.data?.entry?.arrivalsAndDepartures || [];
+      if (!arr.length) { el.innerHTML = '<div class="no-arrivals">No departures in the next hour.</div>'; return; }
       const now = Date.now();
-      const rows = arr.slice(0, 10).map(a => {
+      el.innerHTML = arr.slice(0, 10).map(a => {
         const t = a.predictedDepartureTime || a.scheduledDepartureTime;
         const mins = Math.round((t - now) / 60000);
         const isLive = !!a.predictedDepartureTime;
@@ -414,23 +677,21 @@
           </div>
         </div>`;
       }).join('');
-      el.innerHTML = rows;
-    } catch (e) {
-      el.innerHTML = `<div class="no-arrivals"><i class="ti ti-alert-circle" aria-hidden="true"></i> Couldn't load arrivals — ${e.message}</div>`;
+    } catch(e) {
+      if (el) el.innerHTML = `<div class="no-arrivals">Couldn't load arrivals — ${e.message}</div>`;
     }
   }
 
-  async function refreshAll() {
-    if (!savedStops.length) return;
-    savedStops.forEach(s => {
-      const safeId = s.id.replace(/\W/g, '_');
-      const el = document.getElementById('arrivals-' + safeId);
-      if (el) el.innerHTML = '<div class="loading-msg">Refreshing…</div>';
-      loadArrivals(s.id);
-    });
-    const now = new Date();
-    document.getElementById('last-updated').textContent =
-      `Updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+  // ── AUTO REFRESH ──────────────────────────────────────────────────────────
+  function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshTimer = setInterval(() => {
+      if (currentTab === 'home' && activeGroup) refreshArrivals();
+    }, settings.refreshInterval * 1000);
+  }
+
+  function stopAutoRefresh() {
+    if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
   }
 
   // ── STOP SEARCH ──────────────────────────────────────────────────────────
@@ -438,44 +699,32 @@
     const q = document.getElementById('search-input').value.trim();
     if (!q) return;
     const el = document.getElementById('search-results');
-    el.innerHTML = '<div class="status-bar">Searching…</div>';
+    el.innerHTML = '<div class="status-msg">Searching…</div>';
     try {
-      const url = `${OBA_BASE}/stops-for-location.json?key=${OBA_KEY}&query=${encodeURIComponent(q)}&radius=1200`;
-      const res = await fetch(url);
+      const res = await fetch(`${OBA_BASE}/stops-for-location.json?key=${OBA_KEY}&query=${encodeURIComponent(q)}&radius=1200`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const stops = data?.data?.list || [];
-      if (!stops.length) {
-        el.innerHTML = '<div class="status-bar">No stops found — try a broader search.</div>';
-        return;
-      }
+      const results = data?.data?.list || [];
+      if (!results.length) { el.innerHTML = '<div class="status-msg">No stops found.</div>'; return; }
       const wrap = document.createElement('div');
       wrap.className = 'search-results-list';
-      stops.slice(0, 15).forEach(stop => {
+      results.slice(0, 12).forEach(stop => {
+        const already = stops.some(s => s.id === stop.id);
         const row = document.createElement('div');
         row.className = 'search-result-item';
-        const alreadySaved = savedStops.some(s => s.id === stop.id);
-        row.innerHTML = `
-          <div>
-            <div class="result-name">${escHtml(stop.name)}</div>
-            <div class="result-meta">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
-          </div>
-          ${alreadySaved
-            ? '<span style="font-size:12px;color:var(--text-muted)">Saved</span>'
-            : '<i class="ti ti-plus" aria-hidden="true" style="color:var(--text-muted)"></i>'}`;
-        if (!alreadySaved) {
-          row.onclick = () => {
-            addStop(stop.id, stop.name, stop.direction || '');
-          };
-        } else {
-          row.style.cursor = 'default';
-        }
+        row.innerHTML = `<div>
+          <div style="font-size:14px">${escHtml(stop.name)}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
+        </div>
+        ${already ? '<span style="font-size:12px;color:var(--text-muted)">Saved</span>' : '<i class="ti ti-plus" style="color:var(--text-muted)"></i>'}`;
+        if (!already) row.onclick = () => addStop(stop.id, stop.name, stop.direction || '');
+        else row.style.cursor = 'default';
         wrap.appendChild(row);
       });
       el.innerHTML = '';
       el.appendChild(wrap);
-    } catch (e) {
-      el.innerHTML = `<div class="status-bar">Search failed — ${e.message}</div>`;
+    } catch(e) {
+      el.innerHTML = `<div class="status-msg">Search failed — ${e.message}</div>`;
     }
   }
 
@@ -483,49 +732,218 @@
     const raw = document.getElementById('stopid-input').value.trim();
     if (!raw) return;
     const id = raw.includes('_') ? raw : '1_' + raw;
-    if (savedStops.some(s => s.id === id)) {
-      switchTab('saved');
-      return;
-    }
+    if (stops.some(s => s.id === id)) { renderStopsLibrary(); return; }
     try {
       const res = await fetch(`${OBA_BASE}/stop/${encodeURIComponent(id)}.json?key=${OBA_KEY}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const stop = data?.data?.entry;
-      if (!stop) { alert('Stop not found. Check the ID and try again.'); return; }
+      if (!stop) { alert('Stop not found.'); return; }
       addStop(stop.id, stop.name, stop.direction || '');
       document.getElementById('stopid-input').value = '';
-    } catch (e) {
+    } catch(e) {
       alert(`Couldn't look up stop: ${e.message}`);
     }
   }
 
-  function addStop(id, name, direction) {
-    if (!savedStops.some(s => s.id === id)) {
-      savedStops.push({ id, name, direction });
-      saveStops();
-    }
-    switchTab('saved');
+  async function addStop(id, name, direction) {
+    if (stops.some(s => s.id === id)) return;
+    stops.push({ id, name, direction });
+    await saveStops();
+    renderStopsLibrary();
+    document.getElementById('search-results').innerHTML = '';
   }
 
-  // ── SETTINGS ──────────────────────────────────────────────────────────────
+  async function removeStop(id) {
+    stops = stops.filter(s => s.id !== id);
+    groups = groups.map(g => ({ ...g, stopIds: g.stopIds.filter(sid => sid !== id) }));
+    await Promise.all([saveStops(), saveGroups()]);
+    renderStopsLibrary();
+  }
+
+  function renderStopsLibrary() {
+    const el = document.getElementById('stops-library-list');
+    if (!stops.length) {
+      el.innerHTML = '<div style="padding:1rem;font-size:13px;color:var(--text-muted)">No stops saved yet. Search above to add some.</div>';
+      return;
+    }
+    el.innerHTML = '';
+    stops.forEach(stop => {
+      const row = document.createElement('div');
+      row.className = 'stop-library-item';
+      row.innerHTML = `<div>
+        <div class="stop-library-name">${escHtml(stop.name)}</div>
+        <div class="stop-library-meta">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
+      </div>
+      <button class="icon-btn danger" onclick="removeStop('${stop.id}')"><i class="ti ti-trash"></i></button>`;
+      el.appendChild(row);
+    });
+  }
+
+  // ── GROUPS ────────────────────────────────────────────────────────────────
+  function renderGroups() {
+    const el = document.getElementById('groups-list');
+    if (!groups.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-icon"><i class="ti ti-layout-list"></i></div>
+        <div class="empty-title">No groups yet</div>
+        <div class="empty-body">Create a group to bundle stops for your commute or trips.</div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'card';
+    wrap.style.padding = '0';
+    groups.forEach(g => {
+      const groupStops = g.stopIds.map(id => stops.find(s => s.id === id)).filter(Boolean);
+      const row = document.createElement('div');
+      row.className = 'group-editor-item';
+      row.innerHTML = `<div>
+        <div class="group-editor-name">${escHtml(g.name)}</div>
+        <div class="group-editor-meta">${groupStops.map(s => escHtml(s.name)).join(' · ') || 'No stops'}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" onclick="openEditGroupModal('${g.id}')"><i class="ti ti-pencil"></i></button>
+        <button class="icon-btn danger" onclick="deleteGroup('${g.id}')"><i class="ti ti-trash"></i></button>
+      </div>`;
+      wrap.appendChild(row);
+    });
+    el.appendChild(wrap);
+  }
+
+  function openNewGroupModal() {
+    editingGroupId = null;
+    selectedStopIds = new Set();
+    document.getElementById('modal-title').textContent = 'New group';
+    document.getElementById('group-name-input').value = '';
+    renderStopPicker();
+    document.getElementById('group-modal').classList.remove('hidden');
+  }
+
+  function openEditGroupModal(id) {
+    const group = groups.find(g => g.id === id);
+    if (!group) return;
+    editingGroupId = id;
+    selectedStopIds = new Set(group.stopIds);
+    document.getElementById('modal-title').textContent = 'Edit group';
+    document.getElementById('group-name-input').value = group.name;
+    renderStopPicker();
+    document.getElementById('group-modal').classList.remove('hidden');
+  }
+
+  function closeGroupModal() {
+    document.getElementById('group-modal').classList.add('hidden');
+  }
+
+  function renderStopPicker() {
+    const el = document.getElementById('stop-picker-list');
+    if (!stops.length) {
+      el.innerHTML = '<div style="font-size:13px;color:var(--text-muted)">No stops in your library yet. Add some in the Stops tab first.</div>';
+      return;
+    }
+    el.innerHTML = '';
+    stops.forEach(stop => {
+      const checked = selectedStopIds.has(stop.id);
+      const row = document.createElement('div');
+      row.className = 'stop-picker-item';
+      row.innerHTML = `<div class="stop-picker-check ${checked ? 'checked' : ''}" id="check-${stop.id.replace(/\W/g,'_')}">
+        ${checked ? '<i class="ti ti-check" style="font-size:12px"></i>' : ''}
+      </div>
+      <div>
+        <div style="font-size:14px">${escHtml(stop.name)}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${escHtml(stop.id)}${stop.direction ? ' · ' + escHtml(stop.direction) + ' bound' : ''}</div>
+      </div>`;
+      row.onclick = () => toggleStopPick(stop.id);
+      el.appendChild(row);
+    });
+  }
+
+  function toggleStopPick(id) {
+    const safeId = id.replace(/\W/g, '_');
+    const el = document.getElementById('check-' + safeId);
+    if (selectedStopIds.has(id)) {
+      selectedStopIds.delete(id);
+      el.classList.remove('checked');
+      el.innerHTML = '';
+    } else {
+      selectedStopIds.add(id);
+      el.classList.add('checked');
+      el.innerHTML = '<i class="ti ti-check" style="font-size:12px"></i>';
+    }
+  }
+
+  async function saveGroup() {
+    const name = document.getElementById('group-name-input').value.trim();
+    if (!name) { alert('Please enter a group name.'); return; }
+    if (!selectedStopIds.size) { alert('Please select at least one stop.'); return; }
+    if (editingGroupId) {
+      groups = groups.map(g => g.id === editingGroupId ? { ...g, name, stopIds: [...selectedStopIds] } : g);
+      if (activeGroup?.id === editingGroupId) activeGroup = groups.find(g => g.id === editingGroupId);
+    } else {
+      groups.push({ id: Date.now().toString(36), name, stopIds: [...selectedStopIds] });
+    }
+    await saveGroups();
+    closeGroupModal();
+    renderGroups();
+  }
+
+  async function deleteGroup(id) {
+    groups = groups.filter(g => g.id !== id);
+    if (activeGroup?.id === id) clearActiveGroup();
+    await saveGroups();
+    renderGroups();
+  }
+
+  // ── SETTINGS ─────────────────────────────────────────────────────────────
+  function applySettings() {
+    const toggle = document.getElementById('auto-refresh-toggle');
+    toggle.classList.toggle('on', settings.autoRefresh);
+    document.getElementById('refresh-interval-select').value = String(settings.refreshInterval);
+    document.getElementById('session-timeout-select').value = String(settings.sessionTimeout);
+  }
+
+  function renderSettings() {
+    applySettings();
+    const inp = document.getElementById('api-key-input');
+    inp.value = OBA_KEY !== 'TEST' ? OBA_KEY : '';
+  }
+
+  async function toggleSetting(key) {
+    if (key === 'autoRefresh') {
+      const newVal = !settings.autoRefresh;
+      document.getElementById('auto-refresh-toggle').classList.toggle('on', newVal);
+      await saveConfig({ autoRefresh: newVal });
+      if (newVal && activeGroup) startAutoRefresh();
+      else stopAutoRefresh();
+    }
+  }
+
+  async function saveIntervalSetting() {
+    const val = parseInt(document.getElementById('refresh-interval-select').value);
+    await saveConfig({ refreshInterval: val });
+    if (settings.autoRefresh && activeGroup) startAutoRefresh();
+  }
+
+  async function saveTimeoutSetting() {
+    const val = parseInt(document.getElementById('session-timeout-select').value);
+    await saveConfig({ sessionTimeout: val });
+  }
+
   async function saveApiKey() {
     const val = document.getElementById('api-key-input').value.trim();
     if (!val) return;
     OBA_KEY = val;
-    try {
-      await fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: val })
-      });
-    } catch(e) {}
+    await saveConfig({ apiKey: val });
     updateBanner();
     const status = document.getElementById('api-key-status');
     status.style.color = 'var(--success-text)';
-    status.textContent = 'Key saved. Refreshing stops...';
-    setTimeout(() => { status.textContent = ''; }, 3000);
-    switchTab('saved');
+    status.textContent = 'Key saved.';
+    setTimeout(() => status.textContent = '', 3000);
+  }
+
+  function updateBanner() {
+    document.getElementById('api-key-banner').classList.toggle('tab-hidden', OBA_KEY !== 'TEST');
   }
 
   // ── UTILS ─────────────────────────────────────────────────────────────────
@@ -533,15 +951,7 @@
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── INIT ──────────────────────────────────────────────────────────────────
-  if (autoRefreshOn) {
-    document.getElementById('auto-refresh-toggle').classList.add('on');
-    startAutoRefresh();
-  }
-  loadApiKey().then(() => loadStopsFromServer()).then(() => {
-    renderSaved();
-    if (savedStops.length) refreshAll();
-  });
+  init();
 </script>
 </body>
 </html>
