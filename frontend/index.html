@@ -461,7 +461,6 @@
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────────────────
   const OBA_BASE = 'https://api.pugetsound.onebusaway.org/api/where';
-  const SESSION_KEY = 'oba_active_group';
   // ────────────────────────────────────────────────────────────────────────────
 
   // State
@@ -520,34 +519,31 @@
   // ── SESSION ───────────────────────────────────────────────────────────────
   function checkSession() {
     try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) return;
-      const { groupId, timestamp } = JSON.parse(raw);
-      const ageMinutes = (Date.now() - timestamp) / 60000;
+      const { activeGroupId, activeGroupTimestamp } = settings;
+      if (!activeGroupId || !activeGroupTimestamp) return;
+      const ageMinutes = (Date.now() - activeGroupTimestamp) / 60000;
       if (ageMinutes < settings.sessionTimeout) {
-        const group = groups.find(g => g.id === groupId);
+        const group = groups.find(g => g.id === activeGroupId);
         if (group) activeGroup = group;
-      } else {
-        localStorage.removeItem(SESSION_KEY);
       }
     } catch(e) {}
   }
 
-  function setActiveGroup(group) {
+  async function setActiveGroup(group) {
     activeGroup = group;
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ groupId: group.id, timestamp: Date.now() }));
+    await saveConfig({ activeGroupId: group.id, activeGroupTimestamp: Date.now() });
   }
 
-  function clearActiveGroup() {
+  async function clearActiveGroup() {
     activeGroup = null;
-    localStorage.removeItem(SESSION_KEY);
+    await saveConfig({ activeGroupId: null, activeGroupTimestamp: null });
     stopAutoRefresh();
     renderHome();
   }
 
-  function touchSession() {
+  async function touchSession() {
     if (activeGroup) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ groupId: activeGroup.id, timestamp: Date.now() }));
+      await saveConfig({ activeGroupId: activeGroup.id, activeGroupTimestamp: Date.now() });
     }
   }
 
