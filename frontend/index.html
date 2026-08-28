@@ -144,7 +144,7 @@
     .arrival-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 0.5px solid var(--border); }
     .route-badge { font-size: 12px; font-weight: 600; min-width: 44px; text-align: center; padding: 3px 6px; border-radius: 4px; background: var(--accent-bg); color: var(--accent-text); }
     .arrival-dest { font-size: 13px; color: var(--text-primary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .arrival-right { text-align: right; min-width: 60px; }
+    .arrival-right { text-align: right; min-width: 80px; }
     .arrival-time { font-size: 13px; font-weight: 500; }
     .arrival-time.soon { color: var(--danger); }
     .arrival-time.coming { color: var(--warning-text); }
@@ -158,11 +158,17 @@
     .delay-early { font-size: 11px; color: var(--success-text); }
     .dest-eta { font-size: 11px; color: var(--accent-text); margin-top: 2px; }
     .dest-eta-loading { color: var(--text-muted); }
+    .time-range { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .sched-row { opacity: 0.75; }
+    .sched-header { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 0 4px; }
     .no-arrivals { font-size: 13px; color: var(--text-muted); padding: 6px 0; }
 
     /* Toolbar */
     .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
     .last-updated { font-size: 12px; color: var(--text-muted); }
+    .mode-toggle { display: flex; border: 0.5px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; }
+    .mode-btn { flex: 1; height: 32px; padding: 0 14px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-family: var(--font); cursor: pointer; }
+    .mode-btn.active { background: var(--accent); color: #fff; }
 
     /* Stops library */
     .stop-library-item {
@@ -342,7 +348,11 @@
           <div class="session-expiry" id="session-expiry"></div>
         </div>
         <div class="active-group-actions">
-          <button onclick="refreshArrivals()"><i class="ti ti-refresh"></i> Refresh</button>
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="mode-btn-live" onclick="setMode('live')">Live</button>
+            <button class="mode-btn" id="mode-btn-schedule" onclick="setMode('schedule')">Schedule</button>
+          </div>
+          <button id="refresh-btn" onclick="refreshArrivals()"><i class="ti ti-refresh"></i> Refresh</button>
           <button onclick="clearActiveGroup()"><i class="ti ti-x"></i></button>
         </div>
       </div>
@@ -491,6 +501,7 @@
   let activeGroup = null;
   let autoRefreshTimer = null;
   let editingGroupId = null;
+  let currentMode = 'live'; // 'live' or 'schedule'
   let selectedStopIds = new Set();
   let selectedRouteFilters = {}; // stopId -> comma-separated route numbers
 
@@ -588,8 +599,14 @@
     if (activeGroup) {
       document.getElementById('view-group-select').classList.add('tab-hidden');
       document.getElementById('view-arrivals').classList.remove('tab-hidden');
+      // Set stop header with destination if set
+      const destStop = activeGroup.destinationStopId ? stops.find(s => s.id === activeGroup.destinationStopId) : null;
       document.getElementById('active-group-name').textContent = activeGroup.name;
       updateSessionExpiry();
+      currentMode = 'live';
+      document.getElementById('mode-btn-live').classList.add('active');
+      document.getElementById('mode-btn-schedule').classList.remove('active');
+      document.getElementById('refresh-btn').style.display = '';
       renderArrivals();
       if (settings.autoRefresh) startAutoRefresh();
     } else {
@@ -597,6 +614,20 @@
       document.getElementById('view-group-select').classList.remove('tab-hidden');
       stopAutoRefresh();
       renderGroupSelect();
+    }
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('mode-btn-live').classList.toggle('active', mode === 'live');
+    document.getElementById('mode-btn-schedule').classList.toggle('active', mode === 'schedule');
+    document.getElementById('refresh-btn').style.display = mode === 'live' ? '' : 'none';
+    if (mode === 'live') {
+      renderArrivals();
+      if (settings.autoRefresh) startAutoRefresh();
+    } else {
+      stopAutoRefresh();
+      renderSchedule();
     }
   }
 
@@ -634,9 +665,11 @@
       const card = document.createElement('div');
       card.className = 'stop-card';
       const safeId = stop.id.replace(/\W/g, '_');
+      const destStopObj = activeGroup.destinationStopId ? stops.find(s => s.id === activeGroup.destinationStopId) : null;
+      const headerName = destStopObj ? `${escHtml(stop.name)} → ${escHtml(destStopObj.name)}` : escHtml(stop.name);
       card.innerHTML = `
         <div class="stop-card-header">
-          <div class="stop-name">${escHtml(stop.name)}</div>
+          <div class="stop-name">${headerName}</div>
           <div class="stop-meta">
             <span class="stop-id-pill">${escHtml(stop.id)}</span>
             ${stop.direction ? `<span class="stop-dir">${escHtml(stop.direction)} bound</span>` : ''}
@@ -732,6 +765,10 @@
               const serviceDate = td?.data?.entry?.serviceDate || 0;
               const arrivalOffset = (destStopTime.arrivalTime || destStopTime.departureTime) * 1000;
               tripDestTimes[tripId] = serviceDate + arrivalOffset;
+              console.log(`[ETA] tripId=${tripId} destStop=${destinationStopId} scheduled=${destStopTime.arrivalTime} serviceDate=${serviceDate} result=${new Date(tripDestTimes[tripId]).toLocaleTimeString()}`);
+            } else {
+              const allStopIds = (td?.data?.entry?.schedule?.stopTimes || []).map(s => s.stopId);
+              console.warn(`[ETA] tripId=${tripId} destStop=${destinationStopId} NOT FOUND in stop times. Available:`, allStopIds);
               // Update all rows that use this tripId
               arr.filter(a => a.tripId === tripId).forEach(a => {
                 const predicted = a.predictedDepartureTime;
@@ -740,10 +777,22 @@
                 const destTime = new Date(tripDestTimes[tripId] + delayMs);
                 const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
                 const etaEl = document.getElementById('dest-eta-' + tripId.replace(/\W/g,'_'));
-                if (etaEl) {
-                  etaEl.className = 'dest-eta';
-                  etaEl.textContent = '→ ' + destStop.name + ' ' + destTimeStr;
-                }
+                // Update time-range element for this trip
+                arr.filter(a2 => a2.tripId === tripId).forEach(a2 => {
+                  const predicted2 = a2.predictedDepartureTime;
+                  const scheduled2 = a2.scheduledDepartureTime;
+                  const isLive2 = !!predicted2;
+                  const delayMs2 = (isLive2 && scheduled2) ? (predicted2 - scheduled2) : 0;
+                  const destTime2 = new Date(tripDestTimes[tripId] + delayMs2);
+                  const originTime2 = new Date(predicted2 || scheduled2).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                  const destTimeStr2 = destTime2.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                  const safeTrip = a2.tripId.replace(/\W/g,'_');
+                  const rangeEl = document.getElementById('time-range-' + safeTrip + '-' + a2.scheduledDepartureTime);
+                  if (rangeEl) {
+                    rangeEl.className = 'time-range';
+                    rangeEl.textContent = originTime2 + ' → ' + destTimeStr2;
+                  }
+                });
               });
             }
           } catch(e) {}
@@ -766,24 +815,22 @@
           if (delayMins >= 2) delayStr = `<span class="delay-late">+${delayMins} late</span>`;
           else if (delayMins <= -2) delayStr = `<span class="delay-early">${Math.abs(delayMins)} early</span>`;
         }
-        let destEta = '';
-        if (destStop) {
-          if (tripDestTimes[a.tripId]) {
-            const delayMs = (isLive && scheduled) ? (predicted - scheduled) : 0;
-            const destTime = new Date(tripDestTimes[a.tripId] + delayMs);
-            const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            destEta = `<div class="dest-eta" id="dest-eta-${a.tripId.replace(/\W/g,'_')}">→ ${escHtml(destStop.name)} ${destTimeStr}</div>`;
-          } else {
-            destEta = `<div class="dest-eta dest-eta-loading" id="dest-eta-${a.tripId.replace(/\W/g,'_')}">→ ${escHtml(destStop.name)} …</div>`;
-          }
-        }
+
+        const timeRange = tripDestTimes[a.tripId]
+          ? (() => {
+              const delayMs = (isLive && scheduled) ? (predicted - scheduled) : 0;
+              const destTime = new Date(tripDestTimes[a.tripId] + delayMs);
+              const destTimeStr = destTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+              return `<div class="time-range">${absTime} → ${destTimeStr}</div>`;
+            })()
+          : destStop ? `<div class="time-range dest-eta-loading" id="time-range-${a.tripId.replace(/\W/g,'_')}-${a.scheduledDepartureTime}">${absTime} → …</div>` : `<div class="time-range">${absTime}</div>`;
         return `<div class="arrival-row">
           <span class="route-badge">${escHtml(routeLabel)}</span>
           <span class="arrival-dest" title="${escHtml(a.tripHeadsign || '')}">${escHtml(a.tripHeadsign || 'Unknown')}</span>
           <div class="arrival-right">
-            <div class="arrival-time ${timeClass}">${timeStr} <span class="abs-time">· ${absTime}</span></div>
+            <div class="arrival-time ${timeClass}">${timeStr}</div>
+            ${timeRange}
             <div class="arrival-meta">${isLive ? '<span class="live-badge">live</span>' : '<span class="sched-badge">sched</span>'}${delayStr}</div>
-            ${destEta}
           </div>
         </div>`;
       }).join('');
